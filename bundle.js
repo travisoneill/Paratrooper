@@ -125,6 +125,7 @@
 	      setInterval(function () {
 	        game.draw();
 	        game.step();
+	        console.log("step");
 	      }, 100);
 	    }
 	  }]);
@@ -157,6 +158,7 @@
 	    this.ground = new Ground(canvas);
 	    this.turret = new Turret(canvas);
 	    this.gun = new Gun(canvas);
+	    this.setKeyHandlers();
 	  }
 	
 	  _createClass(Game, [{
@@ -172,6 +174,19 @@
 	    key: 'step',
 	    value: function step() {
 	      this.gun.step();
+	    }
+	  }, {
+	    key: 'setKeyHandlers',
+	    value: function setKeyHandlers() {
+	      var _this = this;
+	
+	      document.addEventListener('keydown', function (event) {
+	        _this.gun.handleKeyDown(event.keyIdentifier);
+	        _this.handleKeyDown(event.keyIdentifier);
+	      });
+	      document.addEventListener('keyup', function (event) {
+	        _this.gun.handleKeyUp(event.keyIdentifier);
+	      });
 	    }
 	  }]);
 	
@@ -203,7 +218,7 @@
 	    value: function draw() {
 	      this.ctx.fillStyle = '#000000';
 	      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-	      this.ctx.fillStyle = '#50FFFF';
+	      this.ctx.fillStyle = '#55FFFF';
 	      this.ctx.fillRect(0, this.canvas.height - 40, this.canvas.width, 4);
 	    }
 	  }]);
@@ -250,12 +265,12 @@
 	      var width = 30;
 	      var height = 30;
 	      // this.ctx.fillStyle = "#DD80F7";
-	      this.ctx.fillStyle = "#ff50ff";
+	      this.ctx.fillStyle = "#ff55ff";
 	      this.ctx.fillRect(center - width / 2, base - height, width, height);
 	      this.ctx.beginPath();
 	      this.ctx.arc(center, base - height, width / 2, 0, Math.PI, true);
 	      this.ctx.fill();
-	      this.ctx.fillStyle = "#50ffff";
+	      this.ctx.fillStyle = "#55ffff";
 	      var width2 = width / 5;
 	      this.fulcrum = { x: center, y: base - height + width2 / 2 };
 	      this.ctx.fillRect(center - width2 / 2, base - height, width2, width2);
@@ -283,8 +298,8 @@
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
-	    this.theta = 10;
-	    this.dtheta = 1;
+	    this.theta = 90;
+	    this.dtheta = 0;
 	  }
 	
 	  _createClass(Gun, [{
@@ -299,7 +314,7 @@
 	      var starty = width / 2;
 	      this.ctx.rotate(this.theta * Math.PI / 180);
 	
-	      this.ctx.fillStyle = '#50FFFF';
+	      this.ctx.fillStyle = '#55FFFF';
 	      this.ctx.beginPath();
 	      this.ctx.moveTo(startx, starty);
 	      this.ctx.lineTo(startx, starty - width);
@@ -313,10 +328,34 @@
 	  }, {
 	    key: 'step',
 	    value: function step() {
-	      if (this.theta < 10 || this.theta > 170) {
-	        this.dtheta = -this.dtheta;
+	      if (this.theta <= 10 && this.dtheta < 0) {
+	        this.theta += 0;
+	      } else if (this.theta >= 170 && this.dtheta > 0) {
+	        this.theta += 0;
+	      } else {
+	        this.theta += this.dtheta;
 	      }
-	      this.theta += this.dtheta;
+	    }
+	  }, {
+	    key: 'handleKeyDown',
+	    value: function handleKeyDown(key) {
+	      if (key === "Left") {
+	        this.dtheta = -2;
+	      }
+	      if (key === "Right") {
+	        this.dtheta = 2;
+	      }
+	    }
+	  }, {
+	    key: 'handleKeyUp',
+	    value: function handleKeyUp(key) {
+	      console.log(key);
+	      if (key === "Left") {
+	        this.dtheta = 0;
+	      }
+	      if (key === "Right") {
+	        this.dtheta = 0;
+	      }
 	    }
 	  }]);
 	
