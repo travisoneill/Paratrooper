@@ -108,6 +108,7 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Game = __webpack_require__(2);
+	var ImageLibrary = __webpack_require__(8);
 	
 	var GameView = function () {
 	  function GameView(canvas) {
@@ -115,7 +116,8 @@
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
-	    this.game = new Game(canvas);
+	    this.library = new ImageLibrary();
+	    this.game = new Game(canvas, this.library.images);
 	  }
 	
 	  _createClass(GameView, [{
@@ -125,8 +127,8 @@
 	      setInterval(function () {
 	        game.draw();
 	        game.step();
-	        console.log("step");
-	      }, 100);
+	        // console.log("step");
+	      }, 20);
 	    }
 	  }]);
 	
@@ -148,16 +150,21 @@
 	var Ground = __webpack_require__(3);
 	var Turret = __webpack_require__(4);
 	var Gun = __webpack_require__(5);
+	var Bullet = __webpack_require__(6);
+	var Helicopter = __webpack_require__(7);
 	
 	var Game = function () {
-	  function Game(canvas) {
+	  function Game(canvas, images) {
 	    _classCallCheck(this, Game);
 	
+	    this.images = images;
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
 	    this.ground = new Ground(canvas);
 	    this.turret = new Turret(canvas);
 	    this.gun = new Gun(canvas);
+	    this.bullets = [];
+	    this.helicopters = [];
 	    this.setKeyHandlers();
 	  }
 	
@@ -165,15 +172,97 @@
 	    key: 'draw',
 	    value: function draw() {
 	      // this.background.draw();
+	      this.checkCollisions();
 	      this.ground.draw();
 	      this.turret.draw();
 	      this.gun.draw(this.turret.fulcrum);
 	      this.turret.draw();
+	      this.renderBullets();
+	      this.renderHelicopters();
 	    }
 	  }, {
 	    key: 'step',
 	    value: function step() {
 	      this.gun.step();
+	      this.bullets.forEach(function (bullet) {
+	        bullet.step();
+	      });
+	      this.helicopters.forEach(function (helicopter) {
+	        helicopter.step();
+	      });
+	    }
+	  }, {
+	    key: 'renderBullets',
+	    value: function renderBullets() {
+	      var update = [];
+	      for (var i = 0; i < this.bullets.length; i++) {
+	        if (this.inBounds(this.bullets[i]) && this.bullets[i].status === true) {
+	          update.push(this.bullets[i]);
+	        }
+	      }
+	      this.bullets = update;
+	      // console.log(this.bullets);
+	      this.bullets.forEach(function (bullet) {
+	        bullet.draw();
+	      });
+	    }
+	  }, {
+	    key: 'renderHelicopters',
+	    value: function renderHelicopters() {
+	      var update = [];
+	      for (var i = 0; i < this.helicopters.length; i++) {
+	        if (this.inBounds(this.helicopters[i]) && this.helicopters[i].status === true) {
+	          update.push(this.helicopters[i]);
+	        }
+	      }
+	      this.helicopters = update;
+	
+	      var rand = Math.floor(Math.random() * 10000);
+	      if (rand < 200) {
+	        var helicopter = this.randomHelicopter(rand);
+	        this.helicopters.push(helicopter);
+	      }
+	
+	      this.helicopters.forEach(function (helicopter) {
+	        helicopter.draw();
+	      });
+	    }
+	  }, {
+	    key: 'randomHelicopter',
+	    value: function randomHelicopter(rand) {
+	      var dir = "r";
+	      console.log(rand);
+	      if (rand % 2 === 0) {
+	        dir = "l";
+	      }
+	      var height = 50 + rand;
+	      return new Helicopter(this.canvas, this.images, dir, height);
+	    }
+	  }, {
+	    key: 'inBounds',
+	    value: function inBounds(object) {
+	      return object.y >= 0 && object.y <= this.canvas.height && object.x >= -60 && object.x <= this.canvas.width;
+	    }
+	  }, {
+	    key: 'checkCollisions',
+	    value: function checkCollisions() {
+	      for (var i = 0; i < this.bullets.length; i++) {
+	        var bullet = this.bullets[i];
+	        for (var j = 0; j < this.helicopters.length; j++) {
+	          var helicopter = this.helicopters[j];
+	          if (bullet.x > helicopter.x && bullet.x < helicopter.x + 48 && bullet.y > helicopter.y && bullet.x < helicopter.y + 20) {
+	            helicopter.status = false;
+	            bullet.status = false;
+	          }
+	        }
+	      }
+	    }
+	  }, {
+	    key: 'handleKeyDown',
+	    value: function handleKeyDown(code) {
+	      if (code === "Space" || code === "ArrowUp") {
+	        this.bullets.push(new Bullet(this.canvas, this.turret.fulcrum, this.gun.theta));
+	      }
 	    }
 	  }, {
 	    key: 'setKeyHandlers',
@@ -182,7 +271,8 @@
 	
 	      document.addEventListener('keydown', function (event) {
 	        _this.gun.handleKeyDown(event.keyIdentifier);
-	        _this.handleKeyDown(event.keyIdentifier);
+	        // console.log(event);
+	        _this.handleKeyDown(event.code);
 	      });
 	      document.addEventListener('keyup', function (event) {
 	        _this.gun.handleKeyUp(event.keyIdentifier);
@@ -320,6 +410,7 @@
 	      this.ctx.lineTo(startx, starty - width);
 	      this.ctx.lineTo(startx - height, starty - width);
 	      this.ctx.arc(startx - height, starty - width / 2, width / 2, 3 * Math.PI / 2, Math.PI / 2, true);
+	      // this.muzzle = {x: startx-height + x, y: starty - width/2 + y};
 	      this.ctx.lineTo(startx, starty);
 	      this.ctx.closePath();
 	      this.ctx.fill();
@@ -340,16 +431,15 @@
 	    key: 'handleKeyDown',
 	    value: function handleKeyDown(key) {
 	      if (key === "Left") {
-	        this.dtheta = -2;
+	        this.dtheta = -3;
 	      }
 	      if (key === "Right") {
-	        this.dtheta = 2;
+	        this.dtheta = 3;
 	      }
 	    }
 	  }, {
 	    key: 'handleKeyUp',
 	    value: function handleKeyUp(key) {
-	      console.log(key);
 	      if (key === "Left") {
 	        this.dtheta = 0;
 	      }
@@ -363,6 +453,142 @@
 	}();
 	
 	module.exports = Gun;
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Bullet = function () {
+	  function Bullet(canvas, origin, angle) {
+	    _classCallCheck(this, Bullet);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.angle = angle * (Math.PI / 180);
+	    this.velocity = 5;
+	    this.vx = -Math.round(Math.cos(this.angle) * this.velocity);
+	    this.vy = -Math.round(Math.sin(this.angle) * this.velocity);
+	    this.x = origin.x + this.vx * 36 / this.velocity;
+	    this.y = origin.y + this.vy * 36 / this.velocity;
+	    this.status = true;
+	  }
+	
+	  _createClass(Bullet, [{
+	    key: "draw",
+	    value: function draw() {
+	      this.ctx.fillStyle = "#ffffff";
+	      this.ctx.fillRect(this.x, this.y, 2, 2);
+	    }
+	  }, {
+	    key: "step",
+	    value: function step() {
+	      this.x += this.vx;
+	      this.y += this.vy;
+	    }
+	  }]);
+	
+	  return Bullet;
+	}();
+	
+	module.exports = Bullet;
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var ImageLibrary = __webpack_require__(8);
+	
+	var Helicopter = function () {
+	  function Helicopter(canvas, images, dir, height) {
+	    _classCallCheck(this, Helicopter);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.y = height;
+	    this.x = -50;
+	    this.dir = dir;
+	    this.velocity = 2;
+	    if (this.dir === "l") {
+	      this.velocity *= -1;
+	      this.x = 799;
+	    }
+	    this.images = images;
+	    this.count = true;
+	    this.status = true;
+	  }
+	
+	  _createClass(Helicopter, [{
+	    key: 'draw',
+	    value: function draw() {
+	      var img = void 0;
+	      if (this.dir === "r" && this.count === true) {
+	        img = this.images.helicopter_r1;
+	      }
+	      if (this.dir === "r" && this.count === false) {
+	        img = this.images.helicopter_r0;
+	      }
+	      if (this.dir === "l" && this.count === true) {
+	        img = this.images.helicopter_l1;
+	      }
+	      if (this.dir === "l" && this.count === false) {
+	        img = this.images.helicopter_l0;
+	      }
+	      this.ctx.drawImage(img, this.x, this.y);
+	    }
+	  }, {
+	    key: 'step',
+	    value: function step() {
+	      this.count = !this.count;
+	      this.x += this.velocity;
+	    }
+	  }]);
+	
+	  return Helicopter;
+	}();
+	
+	module.exports = Helicopter;
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var IMAGES = {
+	  helicopter_r0: './rsc/helicopter-right-0.png',
+	  helicopter_r1: './rsc/helicopter-right-1.png',
+	  helicopter_l0: './rsc/helicopter-left-0.png',
+	  helicopter_l1: './rsc/helicopter-left-1.png'
+	};
+	
+	var ImageLibrary = function ImageLibrary() {
+	  _classCallCheck(this, ImageLibrary);
+	
+	  var images = {};
+	  Object.keys(IMAGES).forEach(function (key) {
+	    var img = new Image();
+	    img.src = IMAGES[key];
+	    images[key] = img;
+	  });
+	  this.images = images;
+	  console.log(this.images);
+	};
+	
+	module.exports = ImageLibrary;
 
 /***/ }
 /******/ ]);
