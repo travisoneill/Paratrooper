@@ -152,6 +152,7 @@
 	var Gun = __webpack_require__(5);
 	var Bullet = __webpack_require__(6);
 	var Helicopter = __webpack_require__(7);
+	var Trooper = __webpack_require__(9);
 	
 	var Game = function () {
 	  function Game(canvas, images) {
@@ -165,6 +166,8 @@
 	    this.gun = new Gun(canvas);
 	    this.bullets = [];
 	    this.helicopters = [];
+	    this.troopers = [];
+	    // this.helicopters = [new Helicopter(canvas, images, "r", 200)];
 	    this.setKeyHandlers();
 	  }
 	
@@ -179,6 +182,8 @@
 	      this.turret.draw();
 	      this.renderBullets();
 	      this.renderHelicopters();
+	      this.renderTroopers();
+	      // this.helicopters[0].draw();
 	    }
 	  }, {
 	    key: 'step',
@@ -189,6 +194,9 @@
 	      });
 	      this.helicopters.forEach(function (helicopter) {
 	        helicopter.step();
+	      });
+	      this.troopers.forEach(function (trooper) {
+	        trooper.step();
 	      });
 	    }
 	  }, {
@@ -231,12 +239,40 @@
 	    key: 'randomHelicopter',
 	    value: function randomHelicopter(rand) {
 	      var dir = "r";
-	      console.log(rand);
 	      if (rand % 2 === 0) {
 	        dir = "l";
 	      }
 	      var height = 50 + rand;
 	      return new Helicopter(this.canvas, this.images, dir, height);
+	    }
+	  }, {
+	    key: 'renderTroopers',
+	    value: function renderTroopers() {
+	      var _this = this;
+	
+	      var update = [];
+	      for (var i = 0; i < this.troopers.length; i++) {
+	        if (this.troopers[i].status === true) {
+	          update.push(this.troopers[i]);
+	        }
+	      }
+	      this.troopers = update;
+	
+	      this.helicopters.forEach(function (helicopter) {
+	
+	        var rand = Math.floor(Math.random() * 10000);
+	        if (helicopter.x > 350 && helicopter.x < 450) {
+	          rand = 1000;
+	        }
+	        var game = _this;
+	        if (rand < 10) {
+	          game.troopers.push(new Trooper(game.canvas, game.images, helicopter));
+	        }
+	      });
+	
+	      this.troopers.forEach(function (trooper) {
+	        trooper.draw();
+	      });
 	    }
 	  }, {
 	    key: 'inBounds',
@@ -250,7 +286,7 @@
 	        var bullet = this.bullets[i];
 	        for (var j = 0; j < this.helicopters.length; j++) {
 	          var helicopter = this.helicopters[j];
-	          if (bullet.x > helicopter.x && bullet.x < helicopter.x + 48 && bullet.y > helicopter.y && bullet.x < helicopter.y + 20) {
+	          if (bullet.x > helicopter.x && bullet.x < helicopter.x + 48 && bullet.y > helicopter.y && bullet.y < helicopter.y + 20) {
 	            helicopter.status = false;
 	            bullet.status = false;
 	          }
@@ -267,15 +303,15 @@
 	  }, {
 	    key: 'setKeyHandlers',
 	    value: function setKeyHandlers() {
-	      var _this = this;
+	      var _this2 = this;
 	
 	      document.addEventListener('keydown', function (event) {
-	        _this.gun.handleKeyDown(event.keyIdentifier);
+	        _this2.gun.handleKeyDown(event.keyIdentifier);
 	        // console.log(event);
-	        _this.handleKeyDown(event.code);
+	        _this2.handleKeyDown(event.code);
 	      });
 	      document.addEventListener('keyup', function (event) {
-	        _this.gun.handleKeyUp(event.keyIdentifier);
+	        _this2.gun.handleKeyUp(event.keyIdentifier);
 	      });
 	    }
 	  }]);
@@ -572,7 +608,9 @@
 	  helicopter_r0: './rsc/helicopter-right-0.png',
 	  helicopter_r1: './rsc/helicopter-right-1.png',
 	  helicopter_l0: './rsc/helicopter-left-0.png',
-	  helicopter_l1: './rsc/helicopter-left-1.png'
+	  helicopter_l1: './rsc/helicopter-left-1.png',
+	  trooper: './rsc/trooper.png',
+	  chute: './rsc/chute.png'
 	};
 	
 	var ImageLibrary = function ImageLibrary() {
@@ -589,6 +627,66 @@
 	};
 	
 	module.exports = ImageLibrary;
+
+/***/ },
+/* 9 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Trooper = function () {
+	  function Trooper(canvas, images, helicopter) {
+	    _classCallCheck(this, Trooper);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.images = images;
+	    this.image = images.trooper;
+	    this.x = helicopter.x;
+	    this.y = helicopter.y;
+	    this.velocity = 2;
+	    this.chute = false;
+	    this.status = true;
+	  }
+	
+	  _createClass(Trooper, [{
+	    key: 'draw',
+	    value: function draw() {
+	      this.ctx.drawImage(this.image, this.x, this.y);
+	      if (this.chute === true) {
+	        this.ctx.drawImage(this.images.chute, this.x - 8, this.y - 28);
+	      }
+	    }
+	  }, {
+	    key: 'step',
+	    value: function step() {
+	      if (this.y < 302 && this.y > 298) {
+	        this.chute = true;
+	        this.velocity = 0.5;
+	      }
+	
+	      // if(this.chute === true){this.velocity = 1;}
+	      if (this.y >= 544) {
+	        this.velocity = 0;
+	        this.y = 544;
+	        this.chute = false;
+	      }
+	
+	      this.y += this.velocity;
+	      if (this.y > this.canvas.height) {
+	        this.status = false;
+	      }
+	    }
+	  }]);
+	
+	  return Trooper;
+	}();
+	
+	module.exports = Trooper;
 
 /***/ }
 /******/ ]);
