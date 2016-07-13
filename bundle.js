@@ -284,14 +284,58 @@
 	    value: function checkCollisions() {
 	      for (var i = 0; i < this.bullets.length; i++) {
 	        var bullet = this.bullets[i];
-	        for (var j = 0; j < this.helicopters.length; j++) {
-	          var helicopter = this.helicopters[j];
-	          if (bullet.x > helicopter.x && bullet.x < helicopter.x + 48 && bullet.y > helicopter.y && bullet.y < helicopter.y + 20) {
-	            helicopter.status = false;
-	            bullet.status = false;
-	          }
+	        this.helicopterLogic(bullet);
+	        this.trooperLogic(bullet);
+	      }
+	    }
+	  }, {
+	    key: 'trooperLogic',
+	    value: function trooperLogic(bullet) {
+	      for (var i = 0; i < this.troopers.length; i++) {
+	        var trooper = this.troopers[i];
+	        if (this.intersectTrooper(trooper, bullet)) {
+	          trooper.chute = false;
+	          trooper.status = false;
+	        } else if (this.intersectChute(trooper, bullet)) {
+	          trooper.chute = false;
+	          trooper.velocity = 2;
 	        }
 	      }
+	    }
+	  }, {
+	    key: 'helicopterLogic',
+	    value: function helicopterLogic(bullet) {
+	      for (var j = 0; j < this.helicopters.length; j++) {
+	        var helicopter = this.helicopters[j];
+	        if (bullet.x > helicopter.x && bullet.x < helicopter.x + 48 && bullet.y > helicopter.y && bullet.y < helicopter.y + 20) {
+	          helicopter.status = false;
+	          bullet.status = false;
+	        }
+	      }
+	    }
+	  }, {
+	    key: 'intersectTrooper',
+	    value: function intersectTrooper(trooper, bullet) {
+	      var tx = trooper.x;
+	      var ty = trooper.y;
+	      var bx = bullet.x;
+	      var by = bullet.y;
+	      if (bx > tx && bx < tx + 8 && by > ty && by < ty + 16) {
+	        return true;
+	      }
+	      return false;
+	    }
+	  }, {
+	    key: 'intersectChute',
+	    value: function intersectChute(trooper, bullet) {
+	      var tx = trooper.x;
+	      var ty = trooper.y;
+	      var bx = bullet.x;
+	      var by = bullet.y;
+	      if (bx > tx - 8 && bx < tx + 16 && by < ty && by > ty - 28) {
+	        return true;
+	      }
+	      return false;
 	    }
 	  }, {
 	    key: 'handleKeyDown',
@@ -610,7 +654,8 @@
 	  helicopter_l0: './rsc/helicopter-left-0.png',
 	  helicopter_l1: './rsc/helicopter-left-1.png',
 	  trooper: './rsc/trooper.png',
-	  chute: './rsc/chute.png'
+	  chute: './rsc/chute.png',
+	  skull: './rsc/skull.png'
 	};
 	
 	var ImageLibrary = function ImageLibrary() {
@@ -671,6 +716,10 @@
 	
 	      // if(this.chute === true){this.velocity = 1;}
 	      if (this.y >= 544) {
+	        if (this.velocity > 1) {
+	          this.status = false;
+	          this.ctx.drawImage(this.images.skull, this.x - 8, this.y - 14);
+	        }
 	        this.velocity = 0;
 	        this.y = 544;
 	        this.chute = false;
