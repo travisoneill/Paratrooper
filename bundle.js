@@ -143,6 +143,8 @@
 
 	'use strict';
 	
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -161,7 +163,7 @@
 	    this.images = images;
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
-	    this.ground = new Ground(canvas);
+	    this.ground = new Ground(canvas, images);
 	    this.turret = new Turret(canvas);
 	    this.gun = new Gun(canvas);
 	    this.bullets = [];
@@ -170,6 +172,8 @@
 	    this.countl = 0;
 	    this.countr = 0;
 	    this.trooperMap = this.makeMap();
+	    this.status = true;
+	    this.timeout = false;
 	    // this.helicopters = [new Helicopter(canvas, images, "r", 200)];
 	    this.setKeyHandlers();
 	  }
@@ -290,23 +294,78 @@
 	      if (this.countr > 3) {
 	        this.deathSequence("r");
 	      }
+	      if (this.countr <= 3 && this.countl <= 3) {
+	        this.status = true;
+	      }
 	    }
 	  }, {
 	    key: 'deathSequence',
 	    value: function deathSequence(side) {
-	      var v = side === "l" ? 1 : -1;
-	      var troopers = this.troopers.filter(function (t) {
-	        return t.side === side;
-	      });
-	      troopers.sort(function (a, b) {
-	        Math.abs(a.x - 400) - Math.abs(b.x - 400);
-	      });
-	      var t0 = troopers[0];
-	      var t1 = troopers[1];
-	      var t2 = troopers[2];
-	      var t3 = troopers[3];
+	      var _this2 = this;
+	
+	      if (this.status === true) {
+	        var troopers = this.troopers.filter(function (t) {
+	          return t.side === side && t.landed === true;
+	        });
+	        troopers.sort(function (a, b) {
+	          Math.abs(a.x - 400) + Math.abs(b.x - 400);
+	        });
+	
+	        var _troopers = _slicedToArray(troopers, 4);
+	
+	        this.t0 = _troopers[0];
+	        this.t1 = _troopers[1];
+	        this.t2 = _troopers[2];
+	        this.t3 = _troopers[3];
+	
+	        this.status = side;
+	      }
+	
+	      var v = this.status === "l" ? 1 : -1;
+	
+	      var t0 = this.t0;
+	      var t1 = this.t1;
+	      var t2 = this.t2;
+	      var t3 = this.t3;
+	
 	
 	      t0.vx = Math.abs(t0.x + 4 - 400) > 52 ? v : 0;
+	
+	      if (Math.abs(t0.x + 4 - 400) === 52) {
+	        t1.vx = Math.abs(t1.x + 4 - 400) > 60 ? v : 0;
+	      }
+	
+	      if (Math.abs(t1.x + 4 - 400) === 60 && this.timeout === false) {
+	        (function () {
+	          var game = _this2;
+	          setTimeout(function () {
+	            t1.x += v * 8;
+	            t1.y -= 16;
+	            game.timeout = false;
+	          }, 200);
+	          _this2.timeout = true;
+	        })();
+	      }
+	
+	      if (Math.abs(t1.x + 4 - 400) === 52) {
+	        t2.vx = Math.abs(t2.x + 4 - 400) > 60 ? v : 0;
+	      }
+	
+	      if (Math.abs(t2.x + 4 - 400) === 60) {
+	        t3.vx = Math.abs(t3.x + 4 - 400) > 68 ? v : 0;
+	      }
+	
+	      if (Math.abs(t3.x + 4 - 400) === 68 && this.timeout === false) {
+	        var _game = this;
+	        this.interval = setInterval(function () {
+	          t3.x += v * 8;
+	          t3.y -= 16;
+	        }, 200);
+	        this.timeout = true;
+	      }
+	      if (t3.y === 104) {
+	        this.status = false;
+	      }
 	    }
 	  }, {
 	    key: 'inBounds',
@@ -390,15 +449,15 @@
 	  }, {
 	    key: 'setKeyHandlers',
 	    value: function setKeyHandlers() {
-	      var _this2 = this;
+	      var _this3 = this;
 	
 	      document.addEventListener('keydown', function (event) {
-	        _this2.gun.handleKeyDown(event.keyIdentifier);
+	        _this3.gun.handleKeyDown(event.keyIdentifier);
 	        // console.log(event);
-	        _this2.handleKeyDown(event.code);
+	        _this3.handleKeyDown(event.code);
 	      });
 	      document.addEventListener('keyup', function (event) {
-	        _this2.gun.handleKeyUp(event.keyIdentifier);
+	        _this3.gun.handleKeyUp(event.keyIdentifier);
 	      });
 	    }
 	  }]);
@@ -419,11 +478,12 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Ground = function () {
-	  function Ground(canvas) {
+	  function Ground(canvas, images) {
 	    _classCallCheck(this, Ground);
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
+	    this.images = images;
 	  }
 	
 	  _createClass(Ground, [{
@@ -433,6 +493,7 @@
 	      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 	      this.ctx.fillStyle = '#55FFFF';
 	      this.ctx.fillRect(0, this.canvas.height - 40, this.canvas.width, 4);
+	      this.ctx.drawImage(this.images.score, 4, this.canvas.height - 24);
 	    }
 	  }]);
 	
@@ -464,7 +525,7 @@
 	    value: function draw() {
 	      var center = this.canvas.width / 2;
 	      var width = 96;
-	      var height = 70;
+	      var height = 48;
 	      var ground = 40;
 	      var top = this.canvas.height - ground - height;
 	      this.ctx.fillStyle = "#ffffff";
@@ -699,7 +760,8 @@
 	  helicopter_l1: './rsc/helicopter-left-1.png',
 	  trooper: './rsc/trooper.png',
 	  chute: './rsc/chute.png',
-	  skull: './rsc/skull.png'
+	  skull: './rsc/skull.png',
+	  score: './rsc/score.png'
 	};
 	
 	var ImageLibrary = function ImageLibrary() {
