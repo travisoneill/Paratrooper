@@ -167,6 +167,9 @@
 	    this.bullets = [];
 	    this.helicopters = [];
 	    this.troopers = [];
+	    this.countl = 0;
+	    this.countr = 0;
+	    this.trooperMap = this.makeMap();
 	    // this.helicopters = [new Helicopter(canvas, images, "r", 200)];
 	    this.setKeyHandlers();
 	  }
@@ -266,13 +269,44 @@
 	        }
 	        var game = _this;
 	        if (rand < 10) {
-	          game.troopers.push(new Trooper(game.canvas, game.images, helicopter));
+	          game.troopers.push(new Trooper(game.canvas, game.images, _this.troopers, helicopter));
 	        }
 	      });
-	
+	      this.countl = 0;
+	      this.countr = 0;
 	      this.troopers.forEach(function (trooper) {
+	        if (trooper.landed === true && trooper.side === "l") {
+	          _this.countl += 1;
+	        }
+	        if (trooper.landed === true && trooper.side === "r") {
+	          _this.countr += 1;
+	        }
 	        trooper.draw();
 	      });
+	
+	      if (this.countl > 3) {
+	        this.deathSequence("l");
+	      }
+	      if (this.countr > 3) {
+	        this.deathSequence("r");
+	      }
+	    }
+	  }, {
+	    key: 'deathSequence',
+	    value: function deathSequence(side) {
+	      var v = side === "l" ? 1 : -1;
+	      var troopers = this.troopers.filter(function (t) {
+	        return t.side === side;
+	      });
+	      troopers.sort(function (a, b) {
+	        Math.abs(a.x - 400) - Math.abs(b.x - 400);
+	      });
+	      var t0 = troopers[0];
+	      var t1 = troopers[1];
+	      var t2 = troopers[2];
+	      var t3 = troopers[3];
+	
+	      t0.vx = Math.abs(t0.x + 4 - 400) > 52 ? v : 0;
 	    }
 	  }, {
 	    key: 'inBounds',
@@ -336,6 +370,15 @@
 	        return true;
 	      }
 	      return false;
+	    }
+	  }, {
+	    key: 'makeMap',
+	    value: function makeMap() {
+	      var map = {};
+	      for (var i = 0; i < 101; i++) {
+	        map[i] = 0;
+	      }
+	      return map;
 	    }
 	  }, {
 	    key: 'handleKeyDown',
@@ -420,7 +463,7 @@
 	    key: "draw",
 	    value: function draw() {
 	      var center = this.canvas.width / 2;
-	      var width = 90;
+	      var width = 96;
 	      var height = 70;
 	      var ground = 40;
 	      var top = this.canvas.height - ground - height;
@@ -605,7 +648,7 @@
 	      this.x = 799;
 	    }
 	    this.images = images;
-	    this.count = true;
+	    this.count = 0;
 	    this.status = true;
 	  }
 	
@@ -613,16 +656,17 @@
 	    key: 'draw',
 	    value: function draw() {
 	      var img = void 0;
-	      if (this.dir === "r" && this.count === true) {
+	      var n = this.count % 6;
+	      if (this.dir === "r" && n <= 3) {
 	        img = this.images.helicopter_r1;
 	      }
-	      if (this.dir === "r" && this.count === false) {
+	      if (this.dir === "r" && n >= 4) {
 	        img = this.images.helicopter_r0;
 	      }
-	      if (this.dir === "l" && this.count === true) {
+	      if (this.dir === "l" && n <= 3) {
 	        img = this.images.helicopter_l1;
 	      }
-	      if (this.dir === "l" && this.count === false) {
+	      if (this.dir === "l" && n >= 4) {
 	        img = this.images.helicopter_l0;
 	      }
 	      this.ctx.drawImage(img, this.x, this.y);
@@ -630,7 +674,7 @@
 	  }, {
 	    key: 'step',
 	    value: function step() {
-	      this.count = !this.count;
+	      this.count += 1;
 	      this.x += this.velocity;
 	    }
 	  }]);
@@ -677,29 +721,34 @@
 /* 9 */
 /***/ function(module, exports) {
 
-	'use strict';
+	"use strict";
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Trooper = function () {
-	  function Trooper(canvas, images, helicopter) {
+	  function Trooper(canvas, images, map, helicopter) {
 	    _classCallCheck(this, Trooper);
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
 	    this.images = images;
 	    this.image = images.trooper;
-	    this.x = helicopter.x;
+	    this.map = map;
+	    this.x = helicopter.x - helicopter.x % 8;
 	    this.y = helicopter.y;
+	    this.side = this.x < 400 ? "l" : "r";
+	    this.pos = this.x / 8;
 	    this.velocity = 2;
+	    this.vx = 0;
 	    this.chute = false;
+	    this.landed = false;
 	    this.status = true;
 	  }
 	
 	  _createClass(Trooper, [{
-	    key: 'draw',
+	    key: "draw",
 	    value: function draw() {
 	      this.ctx.drawImage(this.image, this.x, this.y);
 	      if (this.chute === true) {
@@ -707,28 +756,53 @@
 	      }
 	    }
 	  }, {
-	    key: 'step',
+	    key: "step",
 	    value: function step() {
 	      if (this.y < 302 && this.y > 298) {
 	        this.chute = true;
 	        this.velocity = 0.5;
 	      }
 	
+	      this.y += this.velocity;
+	      this.x += this.vx;
 	      // if(this.chute === true){this.velocity = 1;}
-	      if (this.y >= 544) {
-	        if (this.velocity > 1) {
-	          this.status = false;
-	          this.ctx.drawImage(this.images.skull, this.x - 8, this.y - 14);
-	        }
-	        this.velocity = 0;
-	        this.y = 544;
-	        this.chute = false;
+	      // if(this.y >= 544){ this.landed = true; }
+	
+	      if (this.landed === false && this.y >= 544) {
+	        this.landingLogic();
 	      }
 	
-	      this.y += this.velocity;
+	      if (this.x < 0 || this.x > this.canvas.width - 8) {
+	        this.status === false;
+	      }
 	      if (this.y > this.canvas.height) {
 	        this.status = false;
 	      }
+	    }
+	  }, {
+	    key: "landingLogic",
+	    value: function landingLogic() {
+	      var _this = this;
+	
+	      if (this.velocity > 1) {
+	        this.status = false;
+	        this.ctx.drawImage(this.images.skull, this.x - 8, this.y - 14);
+	        this.map.forEach(function (trooper) {
+	          if (trooper.pos === _this.pos) {
+	            trooper.status = false;
+	          }
+	        });
+	      }
+	      this.velocity = 0;
+	      // console.log(this.map);
+	      this.y = 560;
+	      this.map.forEach(function (trooper) {
+	        if (trooper.pos === _this.pos) {
+	          _this.y -= 16;
+	        }
+	      });
+	      this.chute = false;
+	      this.landed = true;
 	    }
 	  }]);
 	
