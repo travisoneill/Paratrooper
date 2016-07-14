@@ -124,10 +124,13 @@
 	    key: 'start',
 	    value: function start() {
 	      var game = this.game;
+	      var self = this;
 	      setInterval(function () {
 	        game.draw();
 	        game.step();
-	        // console.log("step");
+	        if (game.status === false) {
+	          clearInterval(self.interval);
+	        }
 	      }, 20);
 	    }
 	  }]);
@@ -163,6 +166,7 @@
 	    this.images = images;
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
+	    this.score = 0;
 	    this.ground = new Ground(canvas, images);
 	    this.turret = new Turret(canvas);
 	    this.gun = new Gun(canvas);
@@ -183,7 +187,7 @@
 	    value: function draw() {
 	      // this.background.draw();
 	      this.checkCollisions();
-	      this.ground.draw();
+	      this.ground.draw(this.score);
 	      this.turret.draw();
 	      this.gun.draw(this.turret.fulcrum);
 	      this.turret.draw();
@@ -363,8 +367,13 @@
 	        }, 200);
 	        this.timeout = true;
 	      }
-	      if (t3.y === 104) {
+	
+	      if (t3.y < 500) {
 	        this.status = false;
+	        debugger;
+	        clearInterval(this.interval);
+	        document.removeEventListener('keydown', this.keyDown);
+	        document.removeEventListener('keyup', this.keyUp);
 	      }
 	    }
 	  }, {
@@ -389,9 +398,11 @@
 	        if (this.intersectTrooper(trooper, bullet)) {
 	          trooper.chute = false;
 	          trooper.status = false;
+	          this.score += 5;
 	        } else if (this.intersectChute(trooper, bullet)) {
 	          trooper.chute = false;
 	          trooper.velocity = 2;
+	          this.score += 5;
 	        }
 	      }
 	    }
@@ -403,6 +414,7 @@
 	        if (bullet.x > helicopter.x && bullet.x < helicopter.x + 48 && bullet.y > helicopter.y && bullet.y < helicopter.y + 20) {
 	          helicopter.status = false;
 	          bullet.status = false;
+	          this.score += 10;
 	        }
 	      }
 	    }
@@ -444,21 +456,30 @@
 	    value: function handleKeyDown(code) {
 	      if (code === "Space" || code === "ArrowUp") {
 	        this.bullets.push(new Bullet(this.canvas, this.turret.fulcrum, this.gun.theta));
+	        if (this.score > 0) {
+	          this.score -= 1;
+	        }
 	      }
+	    }
+	  }, {
+	    key: 'keyDown',
+	    value: function keyDown(event) {
+	      debugger;
+	      this.gun.handleKeyDown(event.keyIdentifier);
+	      this.handleKeyDown(event.code);
+	    }
+	  }, {
+	    key: 'keyUp',
+	    value: function keyUp(event) {
+	      debugger;
+	      this.gun.handleKeyUp(event.keyIdentifier);
 	    }
 	  }, {
 	    key: 'setKeyHandlers',
 	    value: function setKeyHandlers() {
-	      var _this3 = this;
-	
-	      document.addEventListener('keydown', function (event) {
-	        _this3.gun.handleKeyDown(event.keyIdentifier);
-	        // console.log(event);
-	        _this3.handleKeyDown(event.code);
-	      });
-	      document.addEventListener('keyup', function (event) {
-	        _this3.gun.handleKeyUp(event.keyIdentifier);
-	      });
+	      var game = this;
+	      document.addEventListener('keydown', game.keyDown);
+	      document.addEventListener('keyup', game.keyUp);
 	    }
 	  }]);
 	
@@ -488,12 +509,29 @@
 	
 	  _createClass(Ground, [{
 	    key: 'draw',
-	    value: function draw() {
+	    value: function draw(score) {
 	      this.ctx.fillStyle = '#000000';
 	      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 	      this.ctx.fillStyle = '#55FFFF';
 	      this.ctx.fillRect(0, this.canvas.height - 40, this.canvas.width, 4);
 	      this.ctx.drawImage(this.images.score, 4, this.canvas.height - 24);
+	      this.drawScore(score);
+	    }
+	  }, {
+	    key: 'drawScore',
+	    value: function drawScore(score) {
+	      var arr = score.toString().split('').map(function (x) {
+	        return parseInt(x);
+	      });
+	      var x = 100;
+	      var y = this.canvas.height - 24;
+	      var ctx = this.ctx;
+	      var img = this.images;
+	      arr.forEach(function (n) {
+	        var num = img[n];
+	        ctx.drawImage(num, x, y);
+	        x += 16;
+	      });
 	    }
 	  }]);
 	
@@ -761,7 +799,17 @@
 	  trooper: './rsc/trooper.png',
 	  chute: './rsc/chute.png',
 	  skull: './rsc/skull.png',
-	  score: './rsc/score.png'
+	  score: './rsc/score.png',
+	  0: './rsc/0.png',
+	  1: './rsc/1.png',
+	  2: './rsc/2.png',
+	  3: './rsc/3.png',
+	  4: './rsc/4.png',
+	  5: './rsc/5.png',
+	  6: './rsc/6.png',
+	  7: './rsc/7.png',
+	  8: './rsc/8.png',
+	  9: './rsc/9.png'
 	};
 	
 	var ImageLibrary = function ImageLibrary() {
