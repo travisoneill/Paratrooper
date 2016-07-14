@@ -235,11 +235,12 @@
 	        }
 	      }
 	      this.helicopters = update;
-	
-	      var rand = Math.floor(Math.random() * 10000);
-	      if (rand < 200) {
-	        var helicopter = this.randomHelicopter(rand);
-	        this.helicopters.push(helicopter);
+	      if (this.status) {
+	        var rand = Math.floor(Math.random() * 10000);
+	        if (rand < 200) {
+	          var helicopter = this.randomHelicopter(rand);
+	          this.helicopters.push(helicopter);
+	        }
 	      }
 	
 	      this.helicopters.forEach(function (helicopter) {
@@ -265,6 +266,8 @@
 	      for (var i = 0; i < this.troopers.length; i++) {
 	        if (this.troopers[i].status === true) {
 	          update.push(this.troopers[i]);
+	        } else {
+	          this.score += 5;
 	        }
 	      }
 	      this.troopers = update;
@@ -370,10 +373,14 @@
 	
 	      if (t3.y < 500) {
 	        this.status = false;
-	        debugger;
+	        this.gun.status = false;
+	        this.turret.status = false;
+	        // let game = this;
 	        clearInterval(this.interval);
-	        document.removeEventListener('keydown', this.keyDown);
-	        document.removeEventListener('keyup', this.keyUp);
+	        // document.removeEventListener('keydown', game.keyDown, true);
+	        // document.removeEventListener('keydown', game.keyDown, false);
+	        // document.removeEventListener('keyup', game.keyUp, true);
+	        // document.removeEventListener('keyup', game.keyUp, false);
 	      }
 	    }
 	  }, {
@@ -398,11 +405,9 @@
 	        if (this.intersectTrooper(trooper, bullet)) {
 	          trooper.chute = false;
 	          trooper.status = false;
-	          this.score += 5;
 	        } else if (this.intersectChute(trooper, bullet)) {
 	          trooper.chute = false;
 	          trooper.velocity = 2;
-	          this.score += 5;
 	        }
 	      }
 	    }
@@ -464,22 +469,24 @@
 	  }, {
 	    key: 'keyDown',
 	    value: function keyDown(event) {
-	      debugger;
-	      this.gun.handleKeyDown(event.keyIdentifier);
-	      this.handleKeyDown(event.code);
+	      if (this.status) {
+	        this.gun.handleKeyDown(event.keyIdentifier);
+	        this.handleKeyDown(event.code);
+	      }
 	    }
 	  }, {
 	    key: 'keyUp',
 	    value: function keyUp(event) {
-	      debugger;
-	      this.gun.handleKeyUp(event.keyIdentifier);
+	      if (this.status) {
+	        this.gun.handleKeyUp(event.keyIdentifier);
+	      }
 	    }
 	  }, {
 	    key: 'setKeyHandlers',
 	    value: function setKeyHandlers() {
 	      var game = this;
-	      document.addEventListener('keydown', game.keyDown);
-	      document.addEventListener('keyup', game.keyUp);
+	      document.addEventListener('keydown', game.keyDown.bind(game), false);
+	      document.addEventListener('keyup', game.keyUp.bind(game), false);
 	    }
 	  }]);
 	
@@ -556,6 +563,7 @@
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
+	    this.status = true;
 	  }
 	
 	  _createClass(Turret, [{
@@ -568,7 +576,9 @@
 	      var top = this.canvas.height - ground - height;
 	      this.ctx.fillStyle = "#ffffff";
 	      this.ctx.fillRect(center - width / 2, top, width, height);
-	      this.drawGunMount(top);
+	      if (this.status === true) {
+	        this.drawGunMount(top);
+	      }
 	    }
 	  }, {
 	    key: "drawGunMount",
@@ -612,6 +622,7 @@
 	    this.ctx = canvas.getContext('2d');
 	    this.theta = 90;
 	    this.dtheta = 0;
+	    this.status = true;
 	  }
 	
 	  _createClass(Gun, [{
@@ -619,6 +630,10 @@
 	    value: function draw(fulcrum) {
 	      var width = 12;
 	      var height = 36;
+	      if (this.status === false) {
+	        width = 0;
+	        height = 0;
+	      }
 	      var x = fulcrum.x;
 	      var y = fulcrum.y;
 	      this.ctx.translate(x, y);
@@ -883,7 +898,7 @@
 	      }
 	
 	      if (this.x < 0 || this.x > this.canvas.width - 8) {
-	        this.status === false;
+	        this.status = false;
 	      }
 	      if (this.y > this.canvas.height) {
 	        this.status = false;
