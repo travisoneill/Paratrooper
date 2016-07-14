@@ -279,7 +279,7 @@
 	          rand = 1000;
 	        }
 	        var game = _this;
-	        if (rand < 10) {
+	        if (rand < 20) {
 	          game.troopers.push(new Trooper(game.canvas, game.images, _this.troopers, helicopter));
 	        }
 	      });
@@ -522,16 +522,20 @@
 	      this.ctx.fillStyle = '#55FFFF';
 	      this.ctx.fillRect(0, this.canvas.height - 40, this.canvas.width, 4);
 	      this.ctx.drawImage(this.images.score, 4, this.canvas.height - 24);
-	      this.drawScore(score);
+	      this.drawScore(score, 100, this.canvas.height - 24);
+	      this.ctx.drawImage(this.images.hiscore, 500, this.canvas.height - 24);
+	      var hiscore = localStorage.hiscore > score ? localStorage.hiscore : score;
+	      localStorage.hiscore = hiscore;
+	      this.drawScore(hiscore, 644, this.canvas.height - 24);
 	    }
 	  }, {
 	    key: 'drawScore',
-	    value: function drawScore(score) {
-	      var arr = score.toString().split('').map(function (x) {
-	        return parseInt(x);
+	    value: function drawScore(score, x, y) {
+	      var arr = score.toString().split('').map(function (n) {
+	        return parseInt(n);
 	      });
-	      var x = 100;
-	      var y = this.canvas.height - 24;
+	      // let x = 100;
+	      // let y = this.canvas.height - 24;
 	      var ctx = this.ctx;
 	      var img = this.images;
 	      arr.forEach(function (n) {
@@ -756,7 +760,7 @@
 	    this.y = height;
 	    this.x = -50;
 	    this.dir = dir;
-	    this.velocity = 2;
+	    this.velocity = 3;
 	    if (this.dir === "l") {
 	      this.velocity *= -1;
 	      this.x = 799;
@@ -815,6 +819,7 @@
 	  chute: './rsc/chute.png',
 	  skull: './rsc/skull.png',
 	  score: './rsc/score.png',
+	  hiscore: './rsc/hi-score.png',
 	  0: './rsc/0.png',
 	  1: './rsc/1.png',
 	  2: './rsc/2.png',
@@ -865,7 +870,7 @@
 	    this.y = helicopter.y;
 	    this.side = this.x < 400 ? "l" : "r";
 	    this.pos = this.x / 8;
-	    this.velocity = 2;
+	    this.velocity = 3;
 	    this.vx = 0;
 	    this.chute = false;
 	    this.landed = false;
@@ -885,7 +890,7 @@
 	    value: function step() {
 	      if (this.y < 302 && this.y > 298) {
 	        this.chute = true;
-	        this.velocity = 0.5;
+	        this.velocity = 0.9;
 	      }
 	
 	      this.y += this.velocity;
