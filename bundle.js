@@ -86,7 +86,7 @@
 	
 	var Game = __webpack_require__(2);
 	var ImageLibrary = __webpack_require__(8);
-	var IntroScreen = __webpack_require__(10);
+	var IntroScreen = __webpack_require__(11);
 	
 	var GameView = function () {
 	  function GameView(canvas, images) {
@@ -138,6 +138,7 @@
 	var Bullet = __webpack_require__(6);
 	var Helicopter = __webpack_require__(7);
 	var Trooper = __webpack_require__(9);
+	var Bomber = __webpack_require__(10);
 	
 	var Game = function () {
 	  function Game(canvas, images) {
@@ -157,9 +158,10 @@
 	    this.bombs = [];
 	    this.countl = 0;
 	    this.countr = 0;
-	    this.trooperMap = this.makeMap();
+	    this.killCount = 0;
 	    this.status = "startup";
 	    this.timeout = false;
+	    this.phase = "helicopter";
 	    // this.helicopters = [new Helicopter(canvas, images, "r", 200)];
 	    this.setKeyHandlers();
 	  }
@@ -187,6 +189,7 @@
 	      this.renderBullets();
 	      this.renderHelicopters();
 	      this.renderTroopers();
+	      this.renderBombers();
 	    }
 	  }, {
 	    key: 'step',
@@ -200,6 +203,33 @@
 	      });
 	      this.troopers.forEach(function (trooper) {
 	        trooper.step();
+	      });
+	      this.bombers.forEach(function (bomber) {
+	        bomber.step();
+	      });
+	
+	      if (this.killCount > 0 && this.killCount % 25 === 0) {
+	        this.phase = "bomber";
+	        this.killCount += 1;
+	      }
+	    }
+	  }, {
+	    key: 'renderBombers',
+	    value: function renderBombers() {
+	      if (this.phase === "bomber" && this.helicopters.length === 0) {
+	        this.bombers.push(new Bomber(this.canvas, this.images, ~~(Math.random() * 2)));
+	        this.phase = "helicopter";
+	      }
+	      var update = [];
+	      this.bombers.forEach(function (bomber) {
+	        if (bomber.status) {
+	          update.push(bomber);
+	        }
+	      });
+	      this.bombers = update;
+	
+	      this.bombers.forEach(function (bomber) {
+	        bomber.draw();
 	      });
 	    }
 	  }, {
@@ -224,20 +254,21 @@
 	      for (var i = 0; i < this.helicopters.length; i++) {
 	        if (this.inBounds(this.helicopters[i]) && this.helicopters[i].status === true) {
 	          update.push(this.helicopters[i]);
+	          this.helicopters[i].draw();
 	        }
 	      }
 	      this.helicopters = update;
 	      if (this.status) {
-	        var rand = Math.floor(Math.random() * 10000);
-	        if (rand < 200) {
+	        var rand = ~~(Math.random() * 10000);
+	        if (rand < 200 && this.phase === "helicopter" && this.bombers.length === 0) {
 	          var helicopter = this.randomHelicopter(rand);
 	          this.helicopters.push(helicopter);
 	        }
 	      }
 	
-	      this.helicopters.forEach(function (helicopter) {
-	        helicopter.draw();
-	      });
+	      // this.helicopters.forEach( (helicopter) => {
+	      //   helicopter.draw();
+	      // });
 	    }
 	  }, {
 	    key: 'randomHelicopter',
@@ -425,6 +456,7 @@
 	          helicopter.status = false;
 	          bullet.status = false;
 	          this.score += 10;
+	          this.killCount += 1;
 	        }
 	      }
 	    }
@@ -451,15 +483,6 @@
 	        return true;
 	      }
 	      return false;
-	    }
-	  }, {
-	    key: 'makeMap',
-	    value: function makeMap() {
-	      var map = {};
-	      for (var i = 0; i < 101; i++) {
-	        map[i] = 0;
-	      }
-	      return map;
 	    }
 	  }, {
 	    key: 'handleKeyDown',
@@ -824,6 +847,12 @@
 	  helicopter_r1: './rsc/helicopter-right-1.png',
 	  helicopter_l0: './rsc/helicopter-left-0.png',
 	  helicopter_l1: './rsc/helicopter-left-1.png',
+	  bomber_l0: './rsc/bomber-l-0.png',
+	  bomber_l1: './rsc/bomber-l-1.png',
+	  bomber_l2: './rsc/bomber-l-2.png',
+	  bomber_r0: './rsc/bomber-r-0.png',
+	  bomber_r1: './rsc/bomber-r-1.png',
+	  bomber_r2: './rsc/bomber-r-2.png',
 	  trooper: './rsc/trooper.png',
 	  chute: './rsc/chute.png',
 	  skull: './rsc/skull.png',
@@ -953,6 +982,76 @@
 
 /***/ },
 /* 10 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Bomber = function () {
+	  function Bomber(canvas, images, dir) {
+	    _classCallCheck(this, Bomber);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.images = images;
+	    this.status = true;
+	    this.dir = dir === 1 ? "l" : "r";
+	    this.count = 0;
+	    this.vx = 5;
+	    this.y = 40;
+	    this.x = -50;
+	    if (this.dir === "l") {
+	      this.x = 800;
+	      this.vx = -5;
+	    }
+	  }
+	
+	  _createClass(Bomber, [{
+	    key: "draw",
+	    value: function draw() {
+	      var img = void 0;
+	      var n = ~~(this.count % 9 / 3);
+	      if (this.dir === "r" && n === 0) {
+	        img = this.images.bomber_r0;
+	      }
+	      if (this.dir === "r" && n === 1) {
+	        img = this.images.bomber_r1;
+	      }
+	      if (this.dir === "r" && n === 2) {
+	        img = this.images.bomber_r2;
+	      }
+	      if (this.dir === "l" && n === 0) {
+	        img = this.images.bomber_l0;
+	      }
+	      if (this.dir === "l" && n === 1) {
+	        img = this.images.bomber_l1;
+	      }
+	      if (this.dir === "l" && n === 2) {
+	        img = this.images.bomber_l2;
+	      }
+	      this.ctx.drawImage(img, this.x, this.y);
+	    }
+	  }, {
+	    key: "step",
+	    value: function step() {
+	      this.x += this.vx;
+	      if (this.x > 800 || this.x < -60) {
+	        this.status = false;
+	      }
+	      this.count += 1;
+	    }
+	  }]);
+	
+	  return Bomber;
+	}();
+	
+	module.exports = Bomber;
+
+/***/ },
+/* 11 */
 /***/ function(module, exports) {
 
 	'use strict';
