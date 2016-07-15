@@ -47,9 +47,11 @@
 	'use strict';
 	
 	var GameView = __webpack_require__(1);
+	var ImageLibrary = __webpack_require__(8);
 	
 	var canvas = void 0;
 	var canvasContext = void 0;
+	var game = 'game';
 	
 	window.onload = function () {
 	  console.log("Hello World");
@@ -57,45 +59,20 @@
 	  canvasContext = canvas.getContext('2d');
 	  canvasContext.fillStyle = 'black';
 	  canvasContext.fillRect(0, 0, canvas.width, canvas.height);
-	  var game = new GameView(canvas);
-	  game.start();
 	
-	  // const FPS = 30;
-	  // setInterval(function() {
-	  //   moveEveything();
-	  //   drawEveything();
-	  // }, 1000 / FPS);
+	  var library = new ImageLibrary();
 	
-	  //   canvas.addEventListener('mousemove', function(evt){
-	  //     let mousePos = calcMousePos(evt).y
-	  //     paddle1y = mousePos;
-	  //   })
+	  // game = new GameView(canvas, library.images);
+	  // game.start();
+	
+	  setInterval(function () {
+	    if (!game.status) {
+	      clearInterval(game.interval);
+	      game = new GameView(canvas, library.images);
+	      game.start();
+	    }
+	  }, 50);
 	};
-	
-	// function drawEveything(){
-	//   console.log("called draw");
-	//   colorRect(0, 0, canvas.width, canvas.height, 'black');
-	//   colorRect(5, paddle1y - 75, 15, paddleHeight, "white");
-	//   // colorRect(ballx, bally, ballWidth, ballHeight, 'red');
-	//   canvasContext.fillStyle = 'red';
-	//   canvasContext.beginPath();
-	//   canvasContext.arc(ballx, bally, ballWidth/2, 0, Math.PI*2, true);
-	//   canvasContext.fill();
-	// }
-	//
-	// function moveEveything(){
-	//   ballx += ballSpeedx;
-	//   bally += ballSpeedy;
-	//   // ballSpeedx += 1;
-	//   // ballSpeedy += 1;
-	//   if(ballx > canvas.width - 10 || ballx < 10){ballSpeedx = -ballSpeedx;}
-	//   if(bally > canvas.height - 10 || bally < 10){ballSpeedy = -ballSpeedy;}
-	// }
-	//
-	// function colorRect(leftx, topy, width, height, color){
-	//   canvasContext.fillStyle = color;
-	//   canvasContext.fillRect(leftx, topy, width, height, color);
-	// }
 
 /***/ },
 /* 1 */
@@ -109,15 +86,18 @@
 	
 	var Game = __webpack_require__(2);
 	var ImageLibrary = __webpack_require__(8);
+	var IntroScreen = __webpack_require__(10);
 	
 	var GameView = function () {
-	  function GameView(canvas) {
+	  function GameView(canvas, images) {
 	    _classCallCheck(this, GameView);
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
-	    this.library = new ImageLibrary();
-	    this.game = new Game(canvas, this.library.images);
+	    this.images = images;
+	    this.game = new Game(canvas, this.images);
+	    this.status = true;
+	    // this.intro = new IntroScreen(canvas, this.images);
 	  }
 	
 	  _createClass(GameView, [{
@@ -125,11 +105,11 @@
 	    value: function start() {
 	      var game = this.game;
 	      var self = this;
-	      setInterval(function () {
+	      this.interval = setInterval(function () {
 	        game.draw();
 	        game.step();
 	        if (game.status === false) {
-	          clearInterval(self.interval);
+	          self.status = false;
 	        }
 	      }, 20);
 	    }
@@ -173,10 +153,12 @@
 	    this.bullets = [];
 	    this.helicopters = [];
 	    this.troopers = [];
+	    this.bombers = [];
+	    this.bombs = [];
 	    this.countl = 0;
 	    this.countr = 0;
 	    this.trooperMap = this.makeMap();
-	    this.status = true;
+	    this.status = "startup";
 	    this.timeout = false;
 	    // this.helicopters = [new Helicopter(canvas, images, "r", 200)];
 	    this.setKeyHandlers();
@@ -185,7 +167,18 @@
 	  _createClass(Game, [{
 	    key: 'draw',
 	    value: function draw() {
-	      // this.background.draw();
+	      if (this.status === "startup") {
+	        this.ctx.drawImage(this.images.title, 175, 100);
+	        this.ctx.drawImage(this.images.start_text, 132, 250);
+	      } else {
+	        this.animateGame();
+	      }
+	
+	      // this.helicopters[0].draw();
+	    }
+	  }, {
+	    key: 'animateGame',
+	    value: function animateGame() {
 	      this.checkCollisions();
 	      this.ground.draw(this.score);
 	      this.turret.draw();
@@ -194,7 +187,6 @@
 	      this.renderBullets();
 	      this.renderHelicopters();
 	      this.renderTroopers();
-	      // this.helicopters[0].draw();
 	    }
 	  }, {
 	    key: 'step',
@@ -301,9 +293,7 @@
 	      if (this.countr > 3) {
 	        this.deathSequence("r");
 	      }
-	      if (this.countr <= 3 && this.countl <= 3) {
-	        this.status = true;
-	      }
+	      // if(this.countr <= 3 && this.countl <= 3){this.status = true;}
 	    }
 	  }, {
 	    key: 'deathSequence',
@@ -326,6 +316,15 @@
 	        this.t3 = _troopers[3];
 	
 	        this.status = side;
+	      }
+	
+	      if (side === 'l' && this.countl < 4) {
+	        this.status = true;
+	        return undefined;
+	      }
+	      if (side === 'r' && this.countr < 4) {
+	        this.status = true;
+	        return undefined;
 	      }
 	
 	      var v = this.status === "l" ? 1 : -1;
@@ -372,15 +371,21 @@
 	      }
 	
 	      if (t3.y < 500) {
-	        this.status = false;
-	        this.gun.status = false;
-	        this.turret.status = false;
-	        // let game = this;
-	        clearInterval(this.interval);
-	        // document.removeEventListener('keydown', game.keyDown, true);
-	        // document.removeEventListener('keydown', game.keyDown, false);
-	        // document.removeEventListener('keyup', game.keyUp, true);
-	        // document.removeEventListener('keyup', game.keyUp, false);
+	        (function () {
+	          _this2.gun.status = false;
+	          _this2.turret.status = false;
+	          var game = _this2;
+	          clearInterval(_this2.interval);
+	          // if(this.helicopters.length === 0){ this.status = false;}
+	          setTimeout(function () {
+	            game.status = false;
+	          }, 2000);
+	          // setTimeout(function(){game.status = ;}, 5000);
+	          // document.removeEventListener('keydown', game.keyDown, true);
+	          // document.removeEventListener('keydown', game.keyDown, false);
+	          // document.removeEventListener('keyup', game.keyUp, true);
+	          // document.removeEventListener('keyup', game.keyUp, false);
+	        })();
 	      }
 	    }
 	  }, {
@@ -459,7 +464,7 @@
 	  }, {
 	    key: 'handleKeyDown',
 	    value: function handleKeyDown(code) {
-	      if (code === "Space" || code === "ArrowUp") {
+	      if ((code === "Space" || code === "ArrowUp") && this.gun.status === true) {
 	        this.bullets.push(new Bullet(this.canvas, this.turret.fulcrum, this.gun.theta));
 	        if (this.score > 0) {
 	          this.score -= 1;
@@ -469,7 +474,9 @@
 	  }, {
 	    key: 'keyDown',
 	    value: function keyDown(event) {
-	      if (this.status) {
+	      if (this.status === "startup" || this.status === false) {
+	        this.status = true;
+	      } else if (this.status) {
 	        this.gun.handleKeyDown(event.keyIdentifier);
 	        this.handleKeyDown(event.code);
 	      }
@@ -713,8 +720,8 @@
 	    this.ctx = canvas.getContext('2d');
 	    this.angle = angle * (Math.PI / 180);
 	    this.velocity = 5;
-	    this.vx = -Math.round(Math.cos(this.angle) * this.velocity);
-	    this.vy = -Math.round(Math.sin(this.angle) * this.velocity);
+	    this.vx = -Math.cos(this.angle) * this.velocity;
+	    this.vy = -Math.sin(this.angle) * this.velocity;
 	    this.x = origin.x + this.vx * 36 / this.velocity;
 	    this.y = origin.y + this.vy * 36 / this.velocity;
 	    this.status = true;
@@ -811,6 +818,8 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var IMAGES = {
+	  title: './rsc/title.png',
+	  start_text: './rsc/start-text.png',
 	  helicopter_r0: './rsc/helicopter-right-0.png',
 	  helicopter_r1: './rsc/helicopter-right-1.png',
 	  helicopter_l0: './rsc/helicopter-left-0.png',
@@ -895,6 +904,7 @@
 	
 	      this.y += this.velocity;
 	      this.x += this.vx;
+	      this.pos = Math.round(this.x / 8);
 	      // if(this.chute === true){this.velocity = 1;}
 	      // if(this.y >= 544){ this.landed = true; }
 	
@@ -940,6 +950,39 @@
 	}();
 	
 	module.exports = Trooper;
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var IntroScreen = function () {
+	  function IntroScreen(canvas, images) {
+	    _classCallCheck(this, IntroScreen);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.images = images;
+	  }
+	
+	  _createClass(IntroScreen, [{
+	    key: 'draw',
+	    value: function draw() {
+	      // this.fillStyle = 'white';
+	      // this.ctx.fillRect(10, 10, 100, 100);
+	      this.ctx.drawImage(this.images.title, 175, 100);
+	    }
+	  }]);
+	
+	  return IntroScreen;
+	}();
+	
+	module.exports = IntroScreen;
 
 /***/ }
 /******/ ]);
