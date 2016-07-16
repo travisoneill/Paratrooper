@@ -1000,12 +1000,12 @@
 	    this.status = true;
 	    this.dir = dir === 1 ? "l" : "r";
 	    this.count = 0;
-	    this.vx = 5;
+	    this.vx = 4;
 	    this.y = 40;
 	    this.x = -50;
 	    if (this.dir === "l") {
 	      this.x = 800;
-	      this.vx = -5;
+	      this.vx *= -1;
 	    }
 	  }
 	
