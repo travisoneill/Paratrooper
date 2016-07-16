@@ -139,6 +139,7 @@
 	var Helicopter = __webpack_require__(7);
 	var Trooper = __webpack_require__(9);
 	var Bomber = __webpack_require__(10);
+	var Bomb = __webpack_require__(12);
 	
 	var Game = function () {
 	  function Game(canvas, images) {
@@ -148,6 +149,7 @@
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
 	    this.score = 0;
+	    this.level = 0;
 	    this.ground = new Ground(canvas, images);
 	    this.turret = new Turret(canvas);
 	    this.gun = new Gun(canvas);
@@ -181,6 +183,7 @@
 	  }, {
 	    key: 'animateGame',
 	    value: function animateGame() {
+	      // console.log(this.bombs);
 	      this.checkCollisions();
 	      this.ground.draw(this.score);
 	      this.turret.draw();
@@ -207,30 +210,70 @@
 	      this.bombers.forEach(function (bomber) {
 	        bomber.step();
 	      });
+	      this.bombs.forEach(function (bomb) {
+	        bomb.step();
+	      });
 	
-	      if (this.killCount > 0 && this.killCount % 25 === 0) {
+	      if (this.killCount > 0 && this.killCount >= 20 + 20 * this.level + 3 * this.level * this.level) {
 	        this.phase = "bomber";
-	        this.killCount += 1;
+	        this.level += 1;
 	      }
 	    }
 	  }, {
 	    key: 'renderBombers',
 	    value: function renderBombers() {
+	      var _this = this;
+	
 	      if (this.phase === "bomber" && this.helicopters.length === 0) {
-	        this.bombers.push(new Bomber(this.canvas, this.images, ~~(Math.random() * 2)));
+	        this.bombers.push(new Bomber(this.canvas, this.images, ~~(Math.random() * 2), this.level));
 	        this.phase = "helicopter";
 	      }
 	      var update = [];
 	      this.bombers.forEach(function (bomber) {
 	        if (bomber.status) {
 	          update.push(bomber);
+	          bomber.draw();
+	          if (Math.abs(380 - bomber.x) < 325 && bomber.payload === true) {
+	            _this.bombs.push(new Bomb(_this.canvas, bomber));
+	            bomber.payload = false;
+	          }
+	          _this.bullets.forEach(function (bullet) {
+	            if (bullet.x > bomber.x && bullet.x < bomber.x + 48 && bullet.y > bomber.y && bullet.y < bomber.y + 20) {
+	              bullet.status = false;
+	              bomber.status = false;
+	              _this.score += 20;
+	            }
+	          });
 	        }
 	      });
 	      this.bombers = update;
 	
-	      this.bombers.forEach(function (bomber) {
-	        bomber.draw();
+	      var update2 = [];
+	      this.bombs.forEach(function (bomb) {
+	        bomb.draw();
+	        // collision detector
+	        _this.bullets.forEach(function (bullet) {
+	          if (bullet.x > bomb.x - 5 && bullet.x < bomb.x + 5 && bullet.y > bomb.y - 5 && bullet.y < bomb.y + 5) {
+	            bullet.status = false;
+	            bomb.status = false;
+	            _this.score += 20;
+	          }
+	        });
+	        if (bomb.status === true) {
+	          update2.push(bomb);
+	        }
+	        if (bomb.y > 500) {
+	          (function () {
+	            _this.gun.status = false;
+	            _this.turret.status = false;
+	            var game = _this;
+	            setTimeout(function () {
+	              game.status = false;
+	            }, 2000);
+	          })();
+	        }
 	      });
+	      this.bombs = update2;
 	    }
 	  }, {
 	    key: 'renderBullets',
@@ -257,6 +300,7 @@
 	          this.helicopters[i].draw();
 	        }
 	      }
+	
 	      this.helicopters = update;
 	      if (this.status) {
 	        var rand = ~~(Math.random() * 10000);
@@ -265,10 +309,6 @@
 	          this.helicopters.push(helicopter);
 	        }
 	      }
-	
-	      // this.helicopters.forEach( (helicopter) => {
-	      //   helicopter.draw();
-	      // });
 	    }
 	  }, {
 	    key: 'randomHelicopter',
@@ -283,7 +323,7 @@
 	  }, {
 	    key: 'renderTroopers',
 	    value: function renderTroopers() {
-	      var _this = this;
+	      var _this2 = this;
 	
 	      var update = [];
 	      for (var i = 0; i < this.troopers.length; i++) {
@@ -301,19 +341,19 @@
 	        if (helicopter.x > 350 && helicopter.x < 450) {
 	          rand = 1000;
 	        }
-	        var game = _this;
+	        var game = _this2;
 	        if (rand < 20) {
-	          game.troopers.push(new Trooper(game.canvas, game.images, _this.troopers, helicopter));
+	          game.troopers.push(new Trooper(game.canvas, game.images, _this2.troopers, helicopter));
 	        }
 	      });
 	      this.countl = 0;
 	      this.countr = 0;
 	      this.troopers.forEach(function (trooper) {
 	        if (trooper.landed === true && trooper.side === "l") {
-	          _this.countl += 1;
+	          _this2.countl += 1;
 	        }
 	        if (trooper.landed === true && trooper.side === "r") {
-	          _this.countr += 1;
+	          _this2.countr += 1;
 	        }
 	        trooper.draw();
 	      });
@@ -329,7 +369,7 @@
 	  }, {
 	    key: 'deathSequence',
 	    value: function deathSequence(side) {
-	      var _this2 = this;
+	      var _this3 = this;
 	
 	      if (this.status === true) {
 	        var troopers = this.troopers.filter(function (t) {
@@ -374,13 +414,13 @@
 	
 	      if (Math.abs(t1.x + 4 - 400) === 60 && this.timeout === false) {
 	        (function () {
-	          var game = _this2;
+	          var game = _this3;
 	          setTimeout(function () {
 	            t1.x += v * 8;
 	            t1.y -= 16;
 	            game.timeout = false;
 	          }, 200);
-	          _this2.timeout = true;
+	          _this3.timeout = true;
 	        })();
 	      }
 	
@@ -403,10 +443,10 @@
 	
 	      if (t3.y < 500) {
 	        (function () {
-	          _this2.gun.status = false;
-	          _this2.turret.status = false;
-	          var game = _this2;
-	          clearInterval(_this2.interval);
+	          _this3.gun.status = false;
+	          _this3.turret.status = false;
+	          var game = _this3;
+	          clearInterval(_this3.interval);
 	          // if(this.helicopters.length === 0){ this.status = false;}
 	          setTimeout(function () {
 	            game.status = false;
@@ -991,16 +1031,18 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Bomber = function () {
-	  function Bomber(canvas, images, dir) {
+	  function Bomber(canvas, images, dir, level) {
 	    _classCallCheck(this, Bomber);
 	
 	    this.canvas = canvas;
 	    this.ctx = canvas.getContext('2d');
 	    this.images = images;
+	    this.level = level;
 	    this.status = true;
+	    this.payload = true;
 	    this.dir = dir === 1 ? "l" : "r";
 	    this.count = 0;
-	    this.vx = 4;
+	    this.vx = 4 * (1 + (this.level - 1) / 10);
 	    this.y = 40;
 	    this.x = -50;
 	    if (this.dir === "l") {
@@ -1082,6 +1124,50 @@
 	}();
 	
 	module.exports = IntroScreen;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Bomb = function () {
+	  function Bomb(canvas, bomber) {
+	    _classCallCheck(this, Bomb);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.x = bomber.x + 20;
+	    this.y = bomber.y + 20;
+	    this.vx = bomber.vx / 2;
+	    this.vy = 3 * (1 + (bomber.level - 1) / 10);
+	    this.status = true;
+	  }
+	
+	  _createClass(Bomb, [{
+	    key: 'draw',
+	    value: function draw() {
+	      this.ctx.fillStyle = '#FFFFFF';
+	      this.ctx.beginPath();
+	      this.ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
+	      this.ctx.fill();
+	    }
+	  }, {
+	    key: 'step',
+	    value: function step() {
+	      this.x += this.vx;
+	      this.y += this.vy;
+	    }
+	  }]);
+	
+	  return Bomb;
+	}();
+	
+	module.exports = Bomb;
 
 /***/ }
 /******/ ]);
