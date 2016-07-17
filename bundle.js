@@ -174,6 +174,7 @@
 	      if (this.status === "startup") {
 	        this.ctx.drawImage(this.images.title, 175, 100);
 	        this.ctx.drawImage(this.images.start_text, 132, 250);
+	        this.ctx.drawImage(this.images.instructions, 50, 300);
 	      } else {
 	        this.animateGame();
 	      }
@@ -214,7 +215,7 @@
 	        bomb.step();
 	      });
 	
-	      if (this.killCount > 0 && this.killCount >= 10 + 20 * this.level + 3 * this.level * this.level) {
+	      if (this.killCount > 0 && this.killCount >= 20 + 20 * this.level + 3 * this.level * this.level) {
 	        this.phase = "bomber";
 	        this.level += 1;
 	      }
@@ -883,6 +884,7 @@
 	var IMAGES = {
 	  title: './rsc/title.png',
 	  start_text: './rsc/start-text.png',
+	  instructions: './rsc/instructions.png',
 	  helicopter_r0: './rsc/helicopter-right-0.png',
 	  helicopter_r1: './rsc/helicopter-right-1.png',
 	  helicopter_l0: './rsc/helicopter-left-0.png',
