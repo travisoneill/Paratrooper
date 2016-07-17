@@ -86,7 +86,7 @@
 	
 	var Game = __webpack_require__(2);
 	var ImageLibrary = __webpack_require__(8);
-	var IntroScreen = __webpack_require__(11);
+	var IntroScreen = __webpack_require__(12);
 	
 	var GameView = function () {
 	  function GameView(canvas, images) {
@@ -139,7 +139,7 @@
 	var Helicopter = __webpack_require__(7);
 	var Trooper = __webpack_require__(9);
 	var Bomber = __webpack_require__(10);
-	var Bomb = __webpack_require__(12);
+	var Bomb = __webpack_require__(11);
 	
 	var Game = function () {
 	  function Game(canvas, images) {
@@ -214,7 +214,7 @@
 	        bomb.step();
 	      });
 	
-	      if (this.killCount > 0 && this.killCount >= 20 + 20 * this.level + 3 * this.level * this.level) {
+	      if (this.killCount > 0 && this.killCount >= 10 + 20 * this.level + 3 * this.level * this.level) {
 	        this.phase = "bomber";
 	        this.level += 1;
 	      }
@@ -1102,39 +1102,6 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
-	var IntroScreen = function () {
-	  function IntroScreen(canvas, images) {
-	    _classCallCheck(this, IntroScreen);
-	
-	    this.canvas = canvas;
-	    this.ctx = canvas.getContext('2d');
-	    this.images = images;
-	  }
-	
-	  _createClass(IntroScreen, [{
-	    key: 'draw',
-	    value: function draw() {
-	      // this.fillStyle = 'white';
-	      // this.ctx.fillRect(10, 10, 100, 100);
-	      this.ctx.drawImage(this.images.title, 175, 100);
-	    }
-	  }]);
-	
-	  return IntroScreen;
-	}();
-	
-	module.exports = IntroScreen;
-
-/***/ },
-/* 12 */
-/***/ function(module, exports) {
-
-	'use strict';
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
 	var Bomb = function () {
 	  function Bomb(canvas, bomber) {
 	    _classCallCheck(this, Bomb);
@@ -1161,6 +1128,10 @@
 	    value: function step() {
 	      this.x += this.vx;
 	      this.y += this.vy;
+	      if (this.y > 510) {
+	        this.y = 530;
+	        this.x = 400;
+	      }
 	    }
 	  }]);
 	
@@ -1168,6 +1139,39 @@
 	}();
 	
 	module.exports = Bomb;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var IntroScreen = function () {
+	  function IntroScreen(canvas, images) {
+	    _classCallCheck(this, IntroScreen);
+	
+	    this.canvas = canvas;
+	    this.ctx = canvas.getContext('2d');
+	    this.images = images;
+	  }
+	
+	  _createClass(IntroScreen, [{
+	    key: 'draw',
+	    value: function draw() {
+	      // this.fillStyle = 'white';
+	      // this.ctx.fillRect(10, 10, 100, 100);
+	      this.ctx.drawImage(this.images.title, 175, 100);
+	    }
+	  }]);
+	
+	  return IntroScreen;
+	}();
+	
+	module.exports = IntroScreen;
 
 /***/ }
 /******/ ]);
