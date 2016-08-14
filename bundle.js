@@ -85,7 +85,7 @@
 	
 	var Game = __webpack_require__(2);
 	var ImageLibrary = __webpack_require__(8);
-	var IntroScreen = __webpack_require__(12);
+	var IntroScreen = __webpack_require__(13);
 	
 	var GameView = function () {
 	  //instantiates game and sets game canvas
@@ -140,7 +140,7 @@
 	var Trooper = __webpack_require__(9);
 	var Bomber = __webpack_require__(10);
 	var Bomb = __webpack_require__(11);
-	var StateMachine = __webpack_require__(13);
+	var StateMachine = __webpack_require__(12);
 	
 	var Game = function () {
 	  function Game(canvas, images) {
@@ -370,27 +370,12 @@
 	        }
 	        trooper.draw();
 	      });
-	      console.log(this.map);
 	      //sets death sequence if trooper count on any side is > 3
 	      if (this.countl > 3) {
 	        this.deathSequence("l");
 	      }
 	      if (this.countr > 3) {
 	        this.deathSequence("r");
-	      }
-	    }
-	    //checks for troopers in final position in death sequence
-	
-	  }, {
-	    key: 'sequenceCheck',
-	    value: function sequenceCheck(side) {
-	      var pos = [0, 0, 0, 0];
-	      var check = void 0;
-	      if (side === left) {
-	        check = [44, 44, 43, 45];
-	      }
-	      if (side === left) {
-	        check = [44, 44, 43, 45];
 	      }
 	    }
 	
@@ -404,6 +389,10 @@
 	      if (side === 'r') {
 	        step = -8;
 	      }
+	      var Machine = new StateMachine(this.map, side);
+	      var state = Machine.getState();
+	      console.log(state);
+	      Machine.run();
 	
 	      // if(this.status === true){
 	      //   //grabs the 4 closest troopers to the turret on the correct side
@@ -1188,6 +1177,183 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
+	var StateMachine = function () {
+	  function StateMachine(map, side) {
+	    _classCallCheck(this, StateMachine);
+	
+	    this.map = map;
+	    this.side = side;
+	    this.start = side === 'l' ? 43 : 56;
+	    this.fwd = this.side === 'l' ? 1 : -1;
+	    this.back = this.fwd * -1;
+	    this.state = this.getState();
+	    this.vx = 2;
+	  }
+	
+	  //state map: X = must be present, 0 = must be absent:
+	  //0: 0 0  1: 0 0    2: 0 0    3: 0 0    4: 0 0     5: 0 0      6: 0 0    7: 0 X  8: X
+	  //     0       0         0         X         X 0        X 0         X X       X
+	  //     0       X 0       X X       X 0       X X 0      X X X       X X       X
+	
+	  _createClass(StateMachine, [{
+	    key: 'getState',
+	    value: function getState() {
+	      var start = this.start;
+	      var fwd = this.fwd;
+	      var back = this.back;
+	      var C = this.posCount.bind(this);
+	      var state = 0;
+	      if (C(start) === 1 && C(start + back) < 1) {
+	        state = 1;
+	      }
+	      if (C(start) === 1 && C(start + back) > 0) {
+	        state = 2;
+	      }
+	      if (C(start) === 2 && C(start + back) === 0) {
+	        state = 3;
+	      }
+	      if (C(start) === 2 && C(start + back) === 1 && C(start + back + back) === 0) {
+	        state = 4;
+	      }
+	      if (C(start) === 2 && C(start + back) === 1 && C(start + back + back) > 0) {
+	        state = 5;
+	      }
+	      if (C(start) === 2 && C(start + back) > 1) {
+	        state = 6;
+	      }
+	      if (C(start) > 2) {
+	        state = 7;
+	      }
+	      if (C(start + fwd) > 0) {
+	        state = 8;
+	      }
+	      return state;
+	    }
+	  }, {
+	    key: 'run',
+	    value: function run() {
+	      switch (this.state) {
+	        case 0:
+	          this.state0();
+	          break;
+	        case 1:
+	          this.state1();
+	          break;
+	        case 2:
+	          this.state2();
+	          break;
+	        case 3:
+	          this.state3();
+	          break;
+	        case 4:
+	          this.state4();
+	          break;
+	        case 5:
+	          this.state5();
+	          break;
+	        case 6:
+	          this.state6();
+	          break;
+	        case 7:
+	          this.state7();
+	          break;
+	      }
+	    }
+	  }, {
+	    key: 'state0',
+	    value: function state0() {
+	      console.log('Move 0');
+	      var trooper = this.grabNearestTrooper();
+	      trooper.x += this.vx * this.fwd;
+	    }
+	  }, {
+	    key: 'state1',
+	    value: function state1() {
+	      console.log(this.state);
+	    }
+	  }, {
+	    key: 'state2',
+	    value: function state2() {
+	      console.log(this.state);
+	    }
+	  }, {
+	    key: 'state3',
+	    value: function state3() {
+	      console.log(this.state);
+	    }
+	  }, {
+	    key: 'state4',
+	    value: function state4() {
+	      console.log(this.state);
+	    }
+	  }, {
+	    key: 'state5',
+	    value: function state5() {
+	      console.log(this.state);
+	    }
+	  }, {
+	    key: 'state6',
+	    value: function state6() {
+	      console.log(this.state);
+	    }
+	  }, {
+	    key: 'state7',
+	    value: function state7() {
+	      console.log(this.state);
+	    }
+	
+	    //returns nearest trooper appropriate for move given state
+	
+	  }, {
+	    key: 'grabNearestTrooper',
+	    value: function grabNearestTrooper(state) {
+	      var startArr = [0, 1, 1, 1, 2, 2, 1, 0];
+	      var startPos = this.start + startArr[this.state];
+	      var step = this.back;
+	      var trooperArr = void 0;
+	      //searches this.map for nearest occupied position
+	      for (var i = startPos; i < 100 && i > -1; i += step) {
+	        trooperArr = this.map[i];
+	        if (trooperArr) {
+	          break;
+	        }
+	      }
+	      //gets trooper with greatest height (least Y)
+	      var trooper = trooperArr[0];
+	      for (var _i = 1; _i < trooperArr.length; _i++) {
+	        if (trooperArr[_i].y < trooper.y) {
+	          trooper = trooperArr[_i];
+	        }
+	      }
+	      return trooper;
+	    }
+	    //returns number of troopers at position 'int'
+	
+	  }, {
+	    key: 'posCount',
+	    value: function posCount(int) {
+	      if (!this.map[int]) {
+	        return 0;
+	      }
+	      return this.map[int].length;
+	    }
+	  }]);
+	
+	  return StateMachine;
+	}();
+	
+	module.exports = StateMachine;
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
 	var IntroScreen = function () {
 	  function IntroScreen(canvas, images) {
 	    _classCallCheck(this, IntroScreen);
@@ -1208,21 +1374,6 @@
 	}();
 	
 	module.exports = IntroScreen;
-
-/***/ },
-/* 13 */
-/***/ function(module, exports) {
-
-	"use strict";
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	var StateMachine = function StateMachine(map, side) {
-	  _classCallCheck(this, StateMachine);
-	
-	  this.map = map;
-	  this.side = side;
-	};
 
 /***/ }
 /******/ ]);
