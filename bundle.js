@@ -1186,7 +1186,7 @@
 	    this.fwd = this.side === 'l' ? 1 : -1;
 	    this.back = this.fwd * -1;
 	    this.state = this.getState();
-	    this.vx = 2;
+	    this.vx = 1;
 	  }
 	
 	  //state map: X = must be present, 0 = must be absent:
@@ -1259,10 +1259,8 @@
 	      }
 	    }
 	  }, {
-	    key: 'state0',
-	    value: function state0() {
-	      console.log('Move 0');
-	      var trooper = this.grabNearestTrooper();
+	    key: 'trooperStep',
+	    value: function trooperStep(trooper) {
 	      trooper.count += this.vx;
 	      if (trooper.count > 8) {
 	        trooper.count %= 8;
@@ -1271,9 +1269,19 @@
 	      }
 	    }
 	  }, {
+	    key: 'state0',
+	    value: function state0() {
+	      console.log('Move 0');
+	      var trooper = this.grabNearestTrooper();
+	      this.trooperStep(trooper);
+	    }
+	  }, {
 	    key: 'state1',
 	    value: function state1() {
-	      console.log(this.state);
+	      console.log('Move 1');
+	      debugger;
+	      var trooper = this.grabNearestTrooper();
+	      this.trooperStep(trooper);
 	    }
 	  }, {
 	    key: 'state2',
@@ -1312,9 +1320,10 @@
 	    key: 'grabNearestTrooper',
 	    value: function grabNearestTrooper(state) {
 	      var startArr = [0, 1, 1, 1, 2, 2, 1, 0];
-	      var startPos = this.start + startArr[this.state];
 	      var step = this.back;
+	      var startPos = this.start + startArr[this.state] * step;
 	      var trooperArr = void 0;
+	      debugger;
 	      //searches this.map for nearest occupied position
 	      for (var i = startPos; i < 100 && i > -1; i += step) {
 	        trooperArr = this.map[i];
