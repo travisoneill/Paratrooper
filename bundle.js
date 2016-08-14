@@ -330,17 +330,6 @@
 	    value: function renderTroopers() {
 	      var _this2 = this;
 	
-	      //removes dead troopers
-	      var update = [];
-	      for (var i = 0; i < this.troopers.length; i++) {
-	        if (this.troopers[i].status === true) {
-	          update.push(this.troopers[i]);
-	        } else {
-	          this.score += 5;
-	        }
-	      }
-	      this.troopers = update;
-	
 	      this.helicopters.forEach(function (helicopter) {
 	        //handles random trooper drop
 	        var rand = Math.floor(Math.random() * 10000);
@@ -355,23 +344,36 @@
 	      //counts landed troopers on each side and maps to trooper.pos
 	      this.countl = 0;
 	      this.countr = 0;
-	      this.map = {};
+	      var update = [];
+	      this.map = {}; //maps troopers for death sequence handling
 	      this.troopers.forEach(function (trooper) {
-	        if (trooper.landed === true && trooper.side === "l") {
-	          _this2.countl += 1;
-	        }
-	        if (trooper.landed === true && trooper.side === "r") {
-	          _this2.countr += 1;
-	        }
+	        if (trooper.status) {
+	          update.push(trooper);
+	        } //removes dead and increments score
+	        else {
+	            _this2.score += 5;
+	          }
 	        if (trooper.landed) {
+	          if (trooper.side === "l") {
+	            _this2.countl += 1;
+	          }
+	          if (trooper.side === "r") {
+	            _this2.countr += 1;
+	          }
 	          if (_this2.map[trooper.pos]) {
+	            trooper.y = 544 - 16 * _this2.map[trooper.pos].length; //deal with stacking
 	            _this2.map[trooper.pos].push(trooper);
 	          } else {
 	            _this2.map[trooper.pos] = [trooper];
+	            trooper.y = 544;
 	          }
+	          if (trooper.pos > 43 && trooper.pos < 56) {
+	            trooper.y = 496;
+	          } //handles edge case in game over
 	        }
 	        trooper.draw();
 	      });
+	      this.troopers = update;
 	      //sets death sequence if trooper count on any side is > 3
 	      if (this.countl > 3) {
 	        this.deathSequence("l");
@@ -388,14 +390,9 @@
 	    value: function deathSequence(side) {
 	      var _this3 = this;
 	
-	      var gameOver = false;
-	      var step = 8;
-	      if (side === 'r') {
-	        step = -8;
-	      }
 	      var Machine = new StateMachine(this.map, side);
 	      var state = Machine.getState();
-	      console.log(state);
+	      //ends game if state gets to 8
 	      if (state === 8) {
 	        (function () {
 	          _this3.gun.status = false;
@@ -407,66 +404,7 @@
 	          }, 2000); //resets startup screen
 	        })();
 	      }
-	
 	      Machine.run();
-	
-	      // if(this.status === true){
-	      //   //grabs the 4 closest troopers to the turret on the correct side
-	      //   let troopers = this.troopers.filter( t => t.side === side && t.landed === true);
-	      //   troopers.sort( (a, b) => {
-	      //     Math.abs(a.x - 400) + Math.abs(b.x - 400);
-	      //   });
-	      //   [this.t0, this.t1, this.t2, this.t3] = troopers.slice(0, 4);
-	      //   this.status = side;
-	      // }
-	      //
-	      // //stops death sequence if count drops below 4
-	      // if(side === 'l' && this.countl < 4){
-	      //   this.status = true;
-	      //   return undefined;
-	      // }
-	      // if(side === 'r' && this.countr < 4){
-	      //   this.status = true;
-	      //   return undefined;
-	      // }
-	      // //sets move direction based on side
-	      // let v = this.status === "l" ? 1 : -1;
-	      //
-	      // let [t0, t1, t2, t3] = [this.t0, this.t1, this.t2, this.t3];
-	      // //sets velocity of first trooper unless in final position
-	      // t0.vx = Math.abs(t0.x + 4 - 400) > 52 ? v : 0;
-	      // //sets trooper 2 velocity if trooper 1 in position
-	      // if(Math.abs(t0.x + 4 - 400) === 52){
-	      //   t1.vx = Math.abs(t1.x + 4 - 400) > 60 ? v : 0;
-	      // }
-	      // if(Math.abs(t1.x + 4 - 400) === 60 && this.timeout === false){
-	      //     let game = this;
-	      //     setTimeout(function(){
-	      //       t1.x += v * 8;
-	      //       t1.y -= 16;
-	      //       game.timeout = false;
-	      //     }, 200);
-	      //     this.timeout = true;
-	      // }
-	      //
-	      // //sets trooper 3 velocity if trooper 2 in position
-	      // if(Math.abs(t1.x + 4 - 400) === 52){
-	      //   t2.vx = Math.abs(t2.x + 4 - 400) > 60 ? v : 0;
-	      // }
-	      // //sets trooper 4 velocity if trooper 3 in position
-	      // if(Math.abs(t2.x + 4 - 400) === 60){
-	      //   t3.vx = Math.abs(t3.x + 4 - 400) > 68 ? v : 0;
-	      // }
-	      //
-	      // if(Math.abs(t3.x + 4 - 400) === 68 && this.timeout === false){
-	      //   let game = this;
-	      //   this.interval = setInterval(function(){
-	      //     t3.x += v * 8;
-	      //     t3.y -= 16;
-	      //   }, 200);
-	      //   this.timeout = true;
-	      // }
-	      //destroys turret if trooper 4 is in position
 	    }
 	    //checks if object is in visible area
 	
