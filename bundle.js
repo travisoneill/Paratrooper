@@ -60,11 +60,10 @@
 	  canvasContext.fillStyle = 'black';
 	  canvasContext.fillRect(0, 0, canvas.width, canvas.height);
 	
+	  //preloads image library into cache
 	  var library = new ImageLibrary();
 	
-	  // game = new GameView(canvas, library.images);
-	  // game.start();
-	
+	  //creates new game view on new game
 	  setInterval(function () {
 	    if (!game.status) {
 	      clearInterval(game.interval);
@@ -86,9 +85,11 @@
 	
 	var Game = __webpack_require__(2);
 	var ImageLibrary = __webpack_require__(8);
-	var IntroScreen = __webpack_require__(12);
+	var IntroScreen = __webpack_require__(13);
 	
 	var GameView = function () {
+	  //instantiates game and sets game canvas
+	
 	  function GameView(canvas, images) {
 	    _classCallCheck(this, GameView);
 	
@@ -97,8 +98,9 @@
 	    this.images = images;
 	    this.game = new Game(canvas, this.images);
 	    this.status = true;
-	    // this.intro = new IntroScreen(canvas, this.images);
 	  }
+	  //sets interval for game animation at the specified frame rate
+	
 	
 	  _createClass(GameView, [{
 	    key: 'start',
@@ -126,8 +128,6 @@
 
 	'use strict';
 	
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -140,6 +140,7 @@
 	var Trooper = __webpack_require__(9);
 	var Bomber = __webpack_require__(10);
 	var Bomb = __webpack_require__(11);
+	var StateMachine = __webpack_require__(12);
 	
 	var Game = function () {
 	  function Game(canvas, images) {
@@ -158,19 +159,19 @@
 	    this.troopers = [];
 	    this.bombers = [];
 	    this.bombs = [];
-	    this.countl = 0;
-	    this.countr = 0;
+	    this.countl = 0; //counts troopers on left side
+	    this.countr = 0; //counts troopers on left side
 	    this.killCount = 0;
 	    this.status = "startup";
 	    this.timeout = false;
-	    this.phase = "helicopter";
-	    // this.helicopters = [new Helicopter(canvas, images, "r", 200)];
+	    this.phase = "helicopter"; //sets initial ai attack mode
 	    this.setKeyHandlers();
 	  }
 	
 	  _createClass(Game, [{
 	    key: 'draw',
 	    value: function draw() {
+	      //title screen
 	      if (this.status === "startup") {
 	        this.ctx.drawImage(this.images.title, 175, 100);
 	        this.ctx.drawImage(this.images.start_text, 132, 250);
@@ -178,13 +179,10 @@
 	      } else {
 	        this.animateGame();
 	      }
-	
-	      // this.helicopters[0].draw();
 	    }
 	  }, {
 	    key: 'animateGame',
 	    value: function animateGame() {
-	      // console.log(this.bombs);
 	      this.checkCollisions();
 	      this.ground.draw(this.score);
 	      this.turret.draw();
@@ -214,7 +212,7 @@
 	      this.bombs.forEach(function (bomb) {
 	        bomb.step();
 	      });
-	
+	      //increments level based on kill count. Switches to bomber attack on level up
 	      if (this.killCount > 0 && this.killCount >= 20 + 20 * this.level + 3 * this.level * this.level) {
 	        this.phase = "bomber";
 	        this.level += 1;
@@ -231,13 +229,16 @@
 	      }
 	      var update = [];
 	      this.bombers.forEach(function (bomber) {
+	        //removes bombers when shot or off screen
 	        if (bomber.status) {
 	          update.push(bomber);
 	          bomber.draw();
+	          //drops bomb at set position
 	          if (Math.abs(380 - bomber.x) < 325 && bomber.payload === true) {
 	            _this.bombs.push(new Bomb(_this.canvas, bomber));
 	            bomber.payload = false;
 	          }
+	          //detects bullet/bomber collision, sets hit bomber to false and increments score
 	          _this.bullets.forEach(function (bullet) {
 	            if (bullet.x > bomber.x && bullet.x < bomber.x + 48 && bullet.y > bomber.y && bullet.y < bomber.y + 20) {
 	              bullet.status = false;
@@ -252,7 +253,7 @@
 	      var update2 = [];
 	      this.bombs.forEach(function (bomb) {
 	        bomb.draw();
-	        // collision detector
+	        // detects bullet bomb collisions
 	        _this.bullets.forEach(function (bullet) {
 	          if (bullet.x > bomb.x - 5 && bullet.x < bomb.x + 5 && bullet.y > bomb.y - 5 && bullet.y < bomb.y + 5) {
 	            bullet.status = false;
@@ -263,6 +264,7 @@
 	        if (bomb.status === true) {
 	          update2.push(bomb);
 	        }
+	        //destroys turret and triggers game over on bomb hit
 	        if (bomb.y > 500) {
 	          (function () {
 	            _this.gun.status = false;
@@ -276,6 +278,8 @@
 	      });
 	      this.bombs = update2;
 	    }
+	    //draws bullets and removes bullets off screen
+	
 	  }, {
 	    key: 'renderBullets',
 	    value: function renderBullets() {
@@ -286,7 +290,6 @@
 	        }
 	      }
 	      this.bullets = update;
-	      // console.log(this.bullets);
 	      this.bullets.forEach(function (bullet) {
 	        bullet.draw();
 	      });
@@ -294,6 +297,7 @@
 	  }, {
 	    key: 'renderHelicopters',
 	    value: function renderHelicopters() {
+	      //removes hit or off screen helicopters
 	      var update = [];
 	      for (var i = 0; i < this.helicopters.length; i++) {
 	        if (this.inBounds(this.helicopters[i]) && this.helicopters[i].status === true) {
@@ -301,8 +305,8 @@
 	          this.helicopters[i].draw();
 	        }
 	      }
-	
 	      this.helicopters = update;
+	      //generates random helicopters
 	      if (this.status) {
 	        var rand = ~~(Math.random() * 10000);
 	        if (rand < 200 && this.phase === "helicopter" && this.bombers.length === 0) {
@@ -326,18 +330,8 @@
 	    value: function renderTroopers() {
 	      var _this2 = this;
 	
-	      var update = [];
-	      for (var i = 0; i < this.troopers.length; i++) {
-	        if (this.troopers[i].status === true) {
-	          update.push(this.troopers[i]);
-	        } else {
-	          this.score += 5;
-	        }
-	      }
-	      this.troopers = update;
-	
 	      this.helicopters.forEach(function (helicopter) {
-	
+	        //handles random trooper drop
 	        var rand = Math.floor(Math.random() * 10000);
 	        if (helicopter.x > 350 && helicopter.x < 450) {
 	          rand = 1000;
@@ -347,124 +341,80 @@
 	          game.troopers.push(new Trooper(game.canvas, game.images, _this2.troopers, helicopter));
 	        }
 	      });
+	      //counts landed troopers on each side and maps to trooper.pos
 	      this.countl = 0;
 	      this.countr = 0;
+	      var update = [];
+	      this.map = {}; //maps troopers for death sequence handling
 	      this.troopers.forEach(function (trooper) {
-	        if (trooper.landed === true && trooper.side === "l") {
-	          _this2.countl += 1;
-	        }
-	        if (trooper.landed === true && trooper.side === "r") {
-	          _this2.countr += 1;
+	        if (trooper.status) {
+	          update.push(trooper);
+	        } //removes dead and increments score
+	        else {
+	            _this2.score += 5;
+	          }
+	        if (trooper.landed) {
+	          if (trooper.side === "l") {
+	            _this2.countl += 1;
+	          }
+	          if (trooper.side === "r") {
+	            _this2.countr += 1;
+	          }
+	          if (_this2.map[trooper.pos]) {
+	            trooper.y = 544 - 16 * _this2.map[trooper.pos].length; //deal with stacking
+	            _this2.map[trooper.pos].push(trooper);
+	          } else {
+	            _this2.map[trooper.pos] = [trooper];
+	            trooper.y = 544;
+	          }
+	          if (trooper.pos > 43 && trooper.pos < 56) {
+	            trooper.y = 496;
+	          } //handles edge case in game over
 	        }
 	        trooper.draw();
 	      });
-	
+	      this.troopers = update;
+	      //sets death sequence if trooper count on any side is > 3
 	      if (this.countl > 3) {
 	        this.deathSequence("l");
 	      }
 	      if (this.countr > 3) {
 	        this.deathSequence("r");
 	      }
-	      // if(this.countr <= 3 && this.countl <= 3){this.status = true;}
 	    }
+	
+	    //handles death sequence
+	
 	  }, {
 	    key: 'deathSequence',
 	    value: function deathSequence(side) {
 	      var _this3 = this;
 	
-	      if (this.status === true) {
-	        var troopers = this.troopers.filter(function (t) {
-	          return t.side === side && t.landed === true;
-	        });
-	        troopers.sort(function (a, b) {
-	          Math.abs(a.x - 400) + Math.abs(b.x - 400);
-	        });
-	
-	        var _troopers = _slicedToArray(troopers, 4);
-	
-	        this.t0 = _troopers[0];
-	        this.t1 = _troopers[1];
-	        this.t2 = _troopers[2];
-	        this.t3 = _troopers[3];
-	
-	        this.status = side;
-	      }
-	
-	      if (side === 'l' && this.countl < 4) {
-	        this.status = true;
-	        return undefined;
-	      }
-	      if (side === 'r' && this.countr < 4) {
-	        this.status = true;
-	        return undefined;
-	      }
-	
-	      var v = this.status === "l" ? 1 : -1;
-	
-	      var t0 = this.t0;
-	      var t1 = this.t1;
-	      var t2 = this.t2;
-	      var t3 = this.t3;
-	
-	
-	      t0.vx = Math.abs(t0.x + 4 - 400) > 52 ? v : 0;
-	
-	      if (Math.abs(t0.x + 4 - 400) === 52) {
-	        t1.vx = Math.abs(t1.x + 4 - 400) > 60 ? v : 0;
-	      }
-	
-	      if (Math.abs(t1.x + 4 - 400) === 60 && this.timeout === false) {
-	        (function () {
-	          var game = _this3;
-	          setTimeout(function () {
-	            t1.x += v * 8;
-	            t1.y -= 16;
-	            game.timeout = false;
-	          }, 200);
-	          _this3.timeout = true;
-	        })();
-	      }
-	
-	      if (Math.abs(t1.x + 4 - 400) === 52) {
-	        t2.vx = Math.abs(t2.x + 4 - 400) > 60 ? v : 0;
-	      }
-	
-	      if (Math.abs(t2.x + 4 - 400) === 60) {
-	        t3.vx = Math.abs(t3.x + 4 - 400) > 68 ? v : 0;
-	      }
-	
-	      if (Math.abs(t3.x + 4 - 400) === 68 && this.timeout === false) {
-	        var _game = this;
-	        this.interval = setInterval(function () {
-	          t3.x += v * 8;
-	          t3.y -= 16;
-	        }, 200);
-	        this.timeout = true;
-	      }
-	
-	      if (t3.y < 500) {
+	      var Machine = new StateMachine(this.map, side);
+	      var state = Machine.getState();
+	      //ends game if state gets to 8
+	      if (state === 8) {
 	        (function () {
 	          _this3.gun.status = false;
 	          _this3.turret.status = false;
 	          var game = _this3;
-	          clearInterval(_this3.interval);
-	          // if(this.helicopters.length === 0){ this.status = false;}
+	          clearInterval(_this3.interval); //clears game inteval
 	          setTimeout(function () {
 	            game.status = false;
-	          }, 2000);
-	          // setTimeout(function(){game.status = ;}, 5000);
-	          // document.removeEventListener('keydown', game.keyDown, true);
-	          // document.removeEventListener('keydown', game.keyDown, false);
-	          // document.removeEventListener('keyup', game.keyUp, true);
-	          // document.removeEventListener('keyup', game.keyUp, false);
+	          }, 2000); //resets startup screen
 	        })();
 	      }
+	      Machine.run();
 	    }
+	    //checks if object is in visible area
+	
 	  }, {
 	    key: 'inBounds',
 	    value: function inBounds(object) {
 	      return object.y >= 0 && object.y <= this.canvas.height && object.x >= -60 && object.x <= this.canvas.width;
 	    }
+	    //checks for bullet helicopter collisions
+	
 	  }, {
 	    key: 'checkCollisions',
 	    value: function checkCollisions() {
@@ -474,6 +424,8 @@
 	        this.trooperLogic(bullet);
 	      }
 	    }
+	    //checks for trooper and chute collisions
+	
 	  }, {
 	    key: 'trooperLogic',
 	    value: function trooperLogic(bullet) {
@@ -484,10 +436,11 @@
 	          trooper.status = false;
 	        } else if (this.intersectChute(trooper, bullet)) {
 	          trooper.chute = false;
-	          trooper.velocity = 2;
 	        }
 	      }
 	    }
+	    //checks for bullet helicopter collisions
+	
 	  }, {
 	    key: 'helicopterLogic',
 	    value: function helicopterLogic(bullet) {
@@ -525,6 +478,8 @@
 	      }
 	      return false;
 	    }
+	    //event handler for shooting bullets
+	
 	  }, {
 	    key: 'handleKeyDown',
 	    value: function handleKeyDown(code) {
@@ -535,6 +490,8 @@
 	        }
 	      }
 	    }
+	    //rotates turret on keydown
+	
 	  }, {
 	    key: 'keyDown',
 	    value: function keyDown(event) {
@@ -545,6 +502,8 @@
 	        this.handleKeyDown(event.code);
 	      }
 	    }
+	    //freezes turret on keyup
+	
 	  }, {
 	    key: 'keyUp',
 	    value: function keyUp(event) {
@@ -552,6 +511,8 @@
 	        this.gun.handleKeyUp(event.keyIdentifier);
 	      }
 	    }
+	    //sets key handlers
+	
 	  }, {
 	    key: 'setKeyHandlers',
 	    value: function setKeyHandlers() {
@@ -605,8 +566,6 @@
 	      var arr = score.toString().split('').map(function (n) {
 	        return parseInt(n);
 	      });
-	      // let x = 100;
-	      // let y = this.canvas.height - 24;
 	      var ctx = this.ctx;
 	      var img = this.images;
 	      arr.forEach(function (n) {
@@ -631,6 +590,8 @@
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	//draws stationary pieces of turret
 	
 	var Turret = function () {
 	  function Turret(canvas) {
@@ -661,7 +622,6 @@
 	      var center = this.canvas.width / 2;
 	      var width = 30;
 	      var height = 30;
-	      // this.ctx.fillStyle = "#DD80F7";
 	      this.ctx.fillStyle = "#ff55ff";
 	      this.ctx.fillRect(center - width / 2, base - height, width, height);
 	      this.ctx.beginPath();
@@ -709,25 +669,26 @@
 	        width = 0;
 	        height = 0;
 	      }
+	      //draws gun barrel based on specified angle 'this.theta'
 	      var x = fulcrum.x;
 	      var y = fulcrum.y;
 	      this.ctx.translate(x, y);
 	      var startx = width / 2;
 	      var starty = width / 2;
 	      this.ctx.rotate(this.theta * Math.PI / 180);
-	
 	      this.ctx.fillStyle = '#55FFFF';
 	      this.ctx.beginPath();
 	      this.ctx.moveTo(startx, starty);
 	      this.ctx.lineTo(startx, starty - width);
 	      this.ctx.lineTo(startx - height, starty - width);
 	      this.ctx.arc(startx - height, starty - width / 2, width / 2, 3 * Math.PI / 2, Math.PI / 2, true);
-	      // this.muzzle = {x: startx-height + x, y: starty - width/2 + y};
 	      this.ctx.lineTo(startx, starty);
 	      this.ctx.closePath();
 	      this.ctx.fill();
 	      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 	    }
+	    //rotates gun based on velocity 'this.dtheta' and sets limit on rotation
+	
 	  }, {
 	    key: 'step',
 	    value: function step() {
@@ -739,6 +700,8 @@
 	        this.theta += this.dtheta;
 	      }
 	    }
+	    //sets angular velocity on keydown
+	
 	  }, {
 	    key: 'handleKeyDown',
 	    value: function handleKeyDown(key) {
@@ -749,6 +712,8 @@
 	        this.dtheta = 3;
 	      }
 	    }
+	    //freezes turret on keyup
+	
 	  }, {
 	    key: 'handleKeyUp',
 	    value: function handleKeyUp(key) {
@@ -784,8 +749,10 @@
 	    this.ctx = canvas.getContext('2d');
 	    this.angle = angle * (Math.PI / 180);
 	    this.velocity = 5;
+	    //defines cartesian vx & vy based on angular position of gun
 	    this.vx = -Math.cos(this.angle) * this.velocity;
 	    this.vy = -Math.sin(this.angle) * this.velocity;
+	    //starts oblect motion at end of barrel to avoid visual artifacts
 	    this.x = origin.x + this.vx * 36 / this.velocity;
 	    this.y = origin.y + this.vy * 36 / this.velocity;
 	    this.status = true;
@@ -845,6 +812,7 @@
 	    key: 'draw',
 	    value: function draw() {
 	      var img = void 0;
+	      //chooses image to render based on direction of movement and cycles through animation
 	      var n = this.count % 6;
 	      if (this.dir === "r" && n <= 3) {
 	        img = this.images.helicopter_r1;
@@ -911,6 +879,7 @@
 	  8: './rsc/8.png',
 	  9: './rsc/9.png'
 	};
+	//loads images into cache as object 'ImageLibrary'
 	
 	var ImageLibrary = function ImageLibrary() {
 	  _classCallCheck(this, ImageLibrary);
@@ -950,11 +919,12 @@
 	    this.y = helicopter.y;
 	    this.side = this.x < 400 ? "l" : "r";
 	    this.pos = this.x / 8;
-	    this.velocity = 3;
+	    this.vy = 3;
 	    this.vx = 0;
-	    this.chute = false;
-	    this.landed = false;
-	    this.status = true;
+	    this.count = 0;
+	    this.chute = false; //chute deployed on true
+	    this.landed = false; //true if on ground
+	    this.status = true; //set to false to flag for removal
 	  }
 	
 	  _createClass(Trooper, [{
@@ -968,21 +938,19 @@
 	  }, {
 	    key: "step",
 	    value: function step() {
+	      //deploys chutes at specified height and slows fall
 	      if (this.y < 302 && this.y > 298) {
 	        this.chute = true;
-	        this.velocity = 0.9;
 	      }
-	
-	      this.y += this.velocity;
+	      this.vy = this.chute ? 1 : 3; //sets drop speed based on chute
+	      this.vy = this.landed ? 0 : this.vy; //sets velocity to 0 if landed; 
+	      this.y += this.vy;
 	      this.x += this.vx;
-	      this.pos = Math.round(this.x / 8);
-	      // if(this.chute === true){this.velocity = 1;}
-	      // if(this.y >= 544){ this.landed = true; }
-	
+	      //checks to see if trooper lives on landing
 	      if (this.landed === false && this.y >= 544) {
 	        this.landingLogic();
 	      }
-	
+	      //removes any troopers off screen
 	      if (this.x < 0 || this.x > this.canvas.width - 8) {
 	        this.status = false;
 	      }
@@ -995,24 +963,25 @@
 	    value: function landingLogic() {
 	      var _this = this;
 	
-	      if (this.velocity > 1) {
+	      //removes any troopers that land without chute
+	      if (!this.chute) {
 	        this.status = false;
 	        this.ctx.drawImage(this.images.skull, this.x - 8, this.y - 14);
+	        //kills any troopers on ground below falling trooper
 	        this.map.forEach(function (trooper) {
 	          if (trooper.pos === _this.pos) {
 	            trooper.status = false;
 	          }
 	        });
 	      }
-	      this.velocity = 0;
-	      // console.log(this.map);
+	      this.vy = 0; //stops falling trooper on impact with ground
 	      this.y = 560;
 	      this.map.forEach(function (trooper) {
 	        if (trooper.pos === _this.pos) {
 	          _this.y -= 16;
-	        }
+	        } //stacks troopers in same position
 	      });
-	      this.chute = false;
+	      this.chute = false; //removes chute on succesful landing
 	      this.landed = true;
 	    }
 	  }]);
@@ -1040,14 +1009,15 @@
 	    this.ctx = canvas.getContext('2d');
 	    this.images = images;
 	    this.level = level;
-	    this.status = true;
-	    this.payload = true;
+	    this.status = true; //setting to false flags object for removal
+	    this.payload = true; //set to false when bomber drops bomb
 	    this.dir = dir === 1 ? "l" : "r";
 	    this.count = 0;
-	    this.vx = 4 * (1 + (this.level - 1) / 10);
+	    this.vx = 4 * (1 + (this.level - 1) / 10); //sets velocity based on level
 	    this.y = 40;
 	    this.x = -50;
 	    if (this.dir === "l") {
+	      //sets velocity based on direction
 	      this.x = 800;
 	      this.vx *= -1;
 	    }
@@ -1058,6 +1028,7 @@
 	    value: function draw() {
 	      var img = void 0;
 	      var n = ~~(this.count % 9 / 3);
+	      //selects which frame to render based on a 9 frame cycle and direction of motion
 	      if (this.dir === "r" && n === 0) {
 	        img = this.images.bomber_r0;
 	      }
@@ -1084,7 +1055,7 @@
 	      this.x += this.vx;
 	      if (this.x > 800 || this.x < -60) {
 	        this.status = false;
-	      }
+	      } //removes objects after leaving visible area
 	      this.count += 1;
 	    }
 	  }]);
@@ -1152,6 +1123,160 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
+	var StateMachine = function () {
+	  function StateMachine(map, side) {
+	    _classCallCheck(this, StateMachine);
+	
+	    this.map = map;
+	    this.side = side;
+	    this.start = side === 'l' ? 43 : 56;
+	    this.fwd = this.side === 'l' ? 1 : -1;
+	    this.back = this.fwd * -1;
+	    this.state = this.getState();
+	    this.vx = 1;
+	  }
+	
+	  //state map: X = must be present, 0 = must be absent:
+	  //0: 0 0  1: 0 0    2: 0 0    3: 0 0    4: 0 0     5: 0 0      6: 0 0    7: 0 X  8: X
+	  //     0       0         0         X         X 0        X 0         X X       X
+	  //     0       X 0       X X       X 0       X X 0      X X X       X X       X
+	
+	  _createClass(StateMachine, [{
+	    key: 'getState',
+	    value: function getState() {
+	      var start = this.start;
+	      var fwd = this.fwd;
+	      var back = this.back;
+	      var C = this.posCount.bind(this);
+	      var state = 0;
+	      if (C(start) === 1 && C(start + back) < 1) {
+	        state = 1;
+	      }
+	      if (C(start) === 1 && C(start + back) > 0) {
+	        state = 2;
+	      }
+	      if (C(start) === 2 && C(start + back) === 0) {
+	        state = 3;
+	      }
+	      if (C(start) === 2 && C(start + back) === 1 && C(start + back + back) === 0) {
+	        state = 4;
+	      }
+	      if (C(start) === 2 && C(start + back) === 1 && C(start + back + back) > 0) {
+	        state = 5;
+	      }
+	      if (C(start) === 2 && C(start + back) > 1) {
+	        state = 6;
+	      }
+	      if (C(start) > 2) {
+	        state = 7;
+	      }
+	      if (C(start + fwd) > 0) {
+	        state = 8;
+	      }
+	      return state;
+	    }
+	  }, {
+	    key: 'run',
+	    value: function run() {
+	      if (this.state === 8) {
+	        return;
+	      }
+	      var trooper = this.grabNearestTrooper();
+	      switch (this.state) {
+	        case 0:
+	        case 1:
+	        case 3:
+	        case 4:
+	          this.trooperStep();
+	          break;
+	        case 2:
+	        case 5:
+	        case 6:
+	        case 7:
+	          this.trooperJump();
+	          break;
+	      }
+	    }
+	    //increments count and moves trooper forward 8 pixels if count > 8
+	
+	  }, {
+	    key: 'trooperStep',
+	    value: function trooperStep() {
+	      var trooper = this.grabNearestTrooper();
+	      trooper.count += this.vx;
+	      if (trooper.count > 8) {
+	        trooper.count %= 8;
+	        trooper.x += 8 * this.fwd;
+	        trooper.pos += this.fwd;
+	      }
+	    }
+	    //moves trooper forward 1 pos and up 1 pos
+	
+	  }, {
+	    key: 'trooperJump',
+	    value: function trooperJump() {
+	      var trooper = this.grabNearestTrooper();
+	      trooper.count += this.vx;
+	      if (trooper.count > 8) {
+	        trooper.count %= 8;
+	        trooper.x += 8 * this.fwd;
+	        trooper.y -= 16;
+	        trooper.pos += this.fwd;
+	      }
+	    }
+	
+	    //returns nearest trooper appropriate for move given state
+	
+	  }, {
+	    key: 'grabNearestTrooper',
+	    value: function grabNearestTrooper(state) {
+	      var startArr = [0, 1, 1, 1, 2, 2, 1, 0];
+	      var step = this.back;
+	      var startPos = this.start + startArr[this.state] * step;
+	      var trooperArr = void 0;
+	      //searches this.map for nearest occupied position
+	      for (var i = startPos; i < 100 && i > -1; i += step) {
+	        trooperArr = this.map[i];
+	        if (trooperArr) {
+	          break;
+	        }
+	      }
+	      //gets trooper with greatest height (least Y)
+	      var trooper = trooperArr[0];
+	      for (var _i = 1; _i < trooperArr.length; _i++) {
+	        if (trooperArr[_i].y < trooper.y) {
+	          trooper = trooperArr[_i];
+	        }
+	      }
+	      return trooper;
+	    }
+	    //returns number of troopers at position 'int'
+	
+	  }, {
+	    key: 'posCount',
+	    value: function posCount(int) {
+	      if (!this.map[int]) {
+	        return 0;
+	      }
+	      return this.map[int].length;
+	    }
+	  }]);
+	
+	  return StateMachine;
+	}();
+	
+	module.exports = StateMachine;
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
 	var IntroScreen = function () {
 	  function IntroScreen(canvas, images) {
 	    _classCallCheck(this, IntroScreen);
@@ -1164,8 +1289,6 @@
 	  _createClass(IntroScreen, [{
 	    key: 'draw',
 	    value: function draw() {
-	      // this.fillStyle = 'white';
-	      // this.ctx.fillRect(10, 10, 100, 100);
 	      this.ctx.drawImage(this.images.title, 175, 100);
 	    }
 	  }]);
