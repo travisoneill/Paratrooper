@@ -12,11 +12,10 @@ window.onload = function(){
   canvasContext.fillStyle = 'black';
   canvasContext.fillRect(0, 0, canvas.width, canvas.height);
 
+  //preloads image library into cache
   const library = new ImageLibrary();
 
-  // game = new GameView(canvas, library.images);
-  // game.start();
-
+  //creates new game view on new game
   setInterval(function(){
     if(!game.status){
       clearInterval(game.interval);
