@@ -1,10 +1,10 @@
 # Paratrooper
 
-<!-- [Algo Arena live][live_url] -->
+[Play the Game][live_url]
 
-<!-- [live_url]: http://www.google.com -->
+[live_url]: https://travisoneill.github.io/Paratrooper/
 
-Vanilla Javascript remake of the MSDOS game from 1982 with original graphics.    
+Vanilla Javascript remake of the MS DOS game from 1982 with original graphics.    
 
 ## Features & Implementation
 
@@ -18,5 +18,3 @@ If you don't shoot down his bomb it's game over.
 ### Animated Explosions When You Shoot Things
 
 ### Touch Handlers for Mobile
-
-### Debugged Trooper Death Sequence
