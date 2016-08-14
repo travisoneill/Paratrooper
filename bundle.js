@@ -386,6 +386,8 @@
 	  }, {
 	    key: 'deathSequence',
 	    value: function deathSequence(side) {
+	      var _this3 = this;
+	
 	      var gameOver = false;
 	      var step = 8;
 	      if (side === 'r') {
@@ -394,6 +396,18 @@
 	      var Machine = new StateMachine(this.map, side);
 	      var state = Machine.getState();
 	      console.log(state);
+	      if (state === 8) {
+	        (function () {
+	          _this3.gun.status = false;
+	          _this3.turret.status = false;
+	          var game = _this3;
+	          clearInterval(_this3.interval); //clears game inteval
+	          setTimeout(function () {
+	            game.status = false;
+	          }, 2000); //resets startup screen
+	        })();
+	      }
+	
 	      Machine.run();
 	
 	      // if(this.status === true){
@@ -452,14 +466,7 @@
 	      //   }, 200);
 	      //   this.timeout = true;
 	      // }
-	      // //destroys turret if trooper 4 is in position
-	      // if(t3.y < 500){
-	      //   this.gun.status = false;
-	      //   this.turret.status = false;
-	      //   let game = this;
-	      //   clearInterval(this.interval); //clears game inteval
-	      //   setTimeout(function(){game.status = false;}, 2000); //resets startup screen
-	      // }
+	      //destroys turret if trooper 4 is in position
 	    }
 	    //checks if object is in visible area
 	
@@ -1233,30 +1240,22 @@
 	  }, {
 	    key: 'run',
 	    value: function run() {
+	      if (this.state === 8) {
+	        return;
+	      }
+	      var trooper = this.grabNearestTrooper();
 	      switch (this.state) {
 	        case 0:
-	          this.state0();
-	          break;
 	        case 1:
-	          this.state1();
+	        case 3:
+	        case 4:
+	          this.trooperStep();
 	          break;
 	        case 2:
-	          this.state2();
-	          break;
-	        case 3:
-	          this.state3();
-	          break;
-	        case 4:
-	          this.state4();
-	          break;
 	        case 5:
-	          this.state5();
-	          break;
 	        case 6:
-	          this.state6();
-	          break;
 	        case 7:
-	          this.state7();
+	          this.trooperJump();
 	          break;
 	      }
 	    }
@@ -1264,7 +1263,8 @@
 	
 	  }, {
 	    key: 'trooperStep',
-	    value: function trooperStep(trooper) {
+	    value: function trooperStep() {
+	      var trooper = this.grabNearestTrooper();
 	      trooper.count += this.vx;
 	      if (trooper.count > 8) {
 	        trooper.count %= 8;
@@ -1276,7 +1276,8 @@
 	
 	  }, {
 	    key: 'trooperJump',
-	    value: function trooperJump(trooper) {
+	    value: function trooperJump() {
+	      var trooper = this.grabNearestTrooper();
 	      trooper.count += this.vx;
 	      if (trooper.count > 8) {
 	        trooper.count %= 8;
@@ -1284,52 +1285,6 @@
 	        trooper.y -= 16;
 	        trooper.pos += this.fwd;
 	      }
-	    }
-	  }, {
-	    key: 'state0',
-	    value: function state0() {
-	      console.log('Move 0');
-	      var trooper = this.grabNearestTrooper();
-	      this.trooperStep(trooper);
-	    }
-	  }, {
-	    key: 'state1',
-	    value: function state1() {
-	      console.log('Move 1');
-	      var trooper = this.grabNearestTrooper();
-	      this.trooperStep(trooper);
-	    }
-	  }, {
-	    key: 'state2',
-	    value: function state2() {
-	      console.log('Move 2');
-	      var trooper = this.grabNearestTrooper();
-	      this.trooperJump(trooper);
-	    }
-	  }, {
-	    key: 'state3',
-	    value: function state3() {
-	      console.log(this.state);
-	    }
-	  }, {
-	    key: 'state4',
-	    value: function state4() {
-	      console.log(this.state);
-	    }
-	  }, {
-	    key: 'state5',
-	    value: function state5() {
-	      console.log(this.state);
-	    }
-	  }, {
-	    key: 'state6',
-	    value: function state6() {
-	      console.log(this.state);
-	    }
-	  }, {
-	    key: 'state7',
-	    value: function state7() {
-	      console.log(this.state);
 	    }
 	
 	    //returns nearest trooper appropriate for move given state
