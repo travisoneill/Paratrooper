@@ -363,10 +363,12 @@
 	        if (trooper.landed === true && trooper.side === "r") {
 	          _this2.countr += 1;
 	        }
-	        if (_this2.map[trooper.pos]) {
-	          _this2.map[trooper.pos].push(trooper);
-	        } else {
-	          _this2.map[trooper.pos] = [trooper];
+	        if (trooper.landed) {
+	          if (_this2.map[trooper.pos]) {
+	            _this2.map[trooper.pos].push(trooper);
+	          } else {
+	            _this2.map[trooper.pos] = [trooper];
+	          }
 	        }
 	        trooper.draw();
 	      });
@@ -1258,6 +1260,8 @@
 	          break;
 	      }
 	    }
+	    //increments count and moves trooper forward 8 pixels if count > 8
+	
 	  }, {
 	    key: 'trooperStep',
 	    value: function trooperStep(trooper) {
@@ -1265,6 +1269,19 @@
 	      if (trooper.count > 8) {
 	        trooper.count %= 8;
 	        trooper.x += 8 * this.fwd;
+	        trooper.pos += this.fwd;
+	      }
+	    }
+	    //moves trooper forward 1 pos and up 1 pos
+	
+	  }, {
+	    key: 'trooperJump',
+	    value: function trooperJump(trooper) {
+	      trooper.count += this.vx;
+	      if (trooper.count > 8) {
+	        trooper.count %= 8;
+	        trooper.x += 8 * this.fwd;
+	        trooper.y -= 16;
 	        trooper.pos += this.fwd;
 	      }
 	    }
@@ -1279,14 +1296,15 @@
 	    key: 'state1',
 	    value: function state1() {
 	      console.log('Move 1');
-	      debugger;
 	      var trooper = this.grabNearestTrooper();
 	      this.trooperStep(trooper);
 	    }
 	  }, {
 	    key: 'state2',
 	    value: function state2() {
-	      console.log(this.state);
+	      console.log('Move 2');
+	      var trooper = this.grabNearestTrooper();
+	      this.trooperJump(trooper);
 	    }
 	  }, {
 	    key: 'state3',
@@ -1323,7 +1341,6 @@
 	      var step = this.back;
 	      var startPos = this.start + startArr[this.state] * step;
 	      var trooperArr = void 0;
-	      debugger;
 	      //searches this.map for nearest occupied position
 	      for (var i = startPos; i < 100 && i > -1; i += step) {
 	        trooperArr = this.map[i];
