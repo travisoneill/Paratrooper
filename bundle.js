@@ -498,7 +498,8 @@
 	      if (this.status === "startup" || this.status === false) {
 	        this.status = true;
 	      } else if (this.status) {
-	        this.gun.handleKeyDown(event.keyIdentifier);
+	        console.log(event);
+	        this.gun.handleKeyDown(event.code);
 	        this.handleKeyDown(event.code);
 	      }
 	    }
@@ -508,7 +509,8 @@
 	    key: 'keyUp',
 	    value: function keyUp(event) {
 	      if (this.status) {
-	        this.gun.handleKeyUp(event.keyIdentifier);
+	        console.log(event);
+	        this.gun.handleKeyUp(event.code);
 	      }
 	    }
 	    //sets key handlers
@@ -705,10 +707,10 @@
 	  }, {
 	    key: 'handleKeyDown',
 	    value: function handleKeyDown(key) {
-	      if (key === "Left") {
+	      if (key === "ArrowLeft") {
 	        this.dtheta = -3;
 	      }
-	      if (key === "Right") {
+	      if (key === "ArrowRight") {
 	        this.dtheta = 3;
 	      }
 	    }
@@ -717,10 +719,10 @@
 	  }, {
 	    key: 'handleKeyUp',
 	    value: function handleKeyUp(key) {
-	      if (key === "Left") {
+	      if (key === "ArrowLeft") {
 	        this.dtheta = 0;
 	      }
-	      if (key === "Right") {
+	      if (key === "ArrowRight") {
 	        this.dtheta = 0;
 	      }
 	    }
@@ -879,6 +881,7 @@
 	  8: './rsc/8.png',
 	  9: './rsc/9.png'
 	};
+	
 	//loads images into cache as object 'ImageLibrary'
 	
 	var ImageLibrary = function ImageLibrary() {
