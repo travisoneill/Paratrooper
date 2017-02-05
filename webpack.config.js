@@ -8,17 +8,23 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: [/\.jsx?$/, /\.js?$/],
+        test: [/\.js?$/],
         exclude: /node_modules/,
-        loader: 'babel',
+        loader: 'babel-loader',
         query: {
-          presets: ['react', 'es2015']
+          presets: ['es2015']
         }
       }
     ]
   },
+  stats: {
+            colors: true,
+            modules: true,
+            reasons: true,
+            errorDetails: true
+          },
+  devtool: 'source-maps',
   resolve: {
-    extensions: ["", ".js", ".jsx"]
-  },
-  devtool: "source-map"
+    extensions: [".js"]
+  }
 };
